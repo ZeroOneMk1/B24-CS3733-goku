@@ -5,6 +5,19 @@ export const handler = async (event) => {
     let requestedDate;
     try {
         requestedDate = new Date(datestring);
+        // Format: YYYY-MM-DD
+        // write a regex to match this format for any date.
+        // 1-1-1 should also be a valid date for january 1st, 1 AD. NO ASSUMING LENGTH!
+        const dateRegex = /^(\d+)-(\d+)-(\d+)$/;
+        const [_, year, month, day] = datestring.match(dateRegex);
+
+        if (month > 12 || month < 1 || day > 31 || day < 1) {
+            throw new Error("Invalid date");
+        }else if (month === 2 && day > 28) {
+            throw new Error("Invalid date");
+        }else if ([4, 6, 9, 11].includes(month) && day > 30) {
+            throw new Error("Invalid date");
+        }
     } catch (error) {
         return {
             statusCode: 400,
