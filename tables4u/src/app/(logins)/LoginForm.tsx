@@ -2,7 +2,11 @@
 import { useRouter } from 'next/navigation';
 import { useState, FormEvent } from "react";
 
-export default function AdminLogin() {
+export default function LoginForm({
+    type
+}: {
+    type: "admin" | "owner"
+}) {
     const router = useRouter();
     const [loginStatus, setLoginStatus] = useState("");
 
@@ -11,7 +15,8 @@ export default function AdminLogin() {
         event.preventDefault();
 
         // form request
-        const url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/LoginAdministrator"
+        const url = process.env.NEXT_PUBLIC_FUNCTION_URL +
+            (type == "admin" ? "/LoginAdministrator" : "/LoginRestaurant");
         const formData = new FormData(event.currentTarget);
         const body = JSON.stringify({
             username: formData.get("username"),
@@ -34,22 +39,22 @@ export default function AdminLogin() {
 
     return (
         <div className="admin-login-panel">
-            <h1>Administrator Login</h1>
+            <h1>{(type == "admin") ? "Administrator Login" : "Owner Login"}</h1>
             <form onSubmit={submit} method="post">
                 <div>
                     <div className="panel-input">
                         <label htmlFor="username">Username:</label>
-                        <input required type="text" name="username" placeholder="Username" />
+                        <input required type="text" id="username" name="username" placeholder="Username" />
                     </div>
                     <div className="panel-input">
                         <label htmlFor="password">Password:</label>
-                        <input required type="password" name="password" placeholder="Password" />
+                        <input required type="password" id="password" name="password" placeholder="Password" />
                     </div>
                 </div>
                 <div>
                     <p>{loginStatus}</p>
                     <input type="submit" value="Log in" />
-                    <a href="/manage">I already have a restaurant</a>
+                    {type == "admin" && <a href="/manage">I already have a restaurant</a> }
                 </div>
             </form>
         </div>
