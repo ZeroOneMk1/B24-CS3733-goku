@@ -33,7 +33,7 @@ export const handler = async (event) => {
         error: "Unable to create database connection"
     };
 
-    try {
+    // try {
         let query;
         const filters = event.filters;
         const onlyShowAvailableRestaurants = filters.onlyShowAvailableRestaurants === "true";
@@ -69,82 +69,63 @@ export const handler = async (event) => {
          * }
         */
         // write a ListRestaurants query using all the filters.
-
+        let restaurantIDs;
+        let restauranterror;
         // IF name is not null
         if (filters.name !== "") {
-            // Find restaurantsIDs that fit the name query.
-            query = `SELECT restaurantID FROM restaurants WHERE name = ? AND isActive = true`;
-            const [restaurantIDs, restauranterror] = await pool.query(query, [filters.name]);
-            if (restauranterror) return {
-                statusCode: 500,
-                error: "Internal server error: unable to query restaurants"
-            };
+            // Find restaurantIDs that fit the name query using partial matching.
+            query = `SELECT restaurantID FROM restaurants WHERE name LIKE ?`; //  AND isActive = true
+            const searchTerm = `%${filters.name}%`;
+            [restaurantIDs, restauranterror] = await pool.query(query, [searchTerm]);
             if (restaurantIDs.length === 0) return {
                 statusCode: 200,
                 restaurants: []
             };
         }else{
-          
             // Find all restaurantIDs.
             query = `SELECT restaurantID FROM restaurants`; //  WHERE isActive = true
-            const [restaurantIDs, restauranterror] = await pool.execute(query);
-            // return {"I got here": "true"};
-            if (restauranterror) return {
-                statusCode: 500,
-                error: "Internal server error: unable to query restaurants",
-                error_verbose: restauranterror
-            };
+            [restaurantIDs, restauranterror] = await pool.query(query);
             if (restaurantIDs.length === 0) return {
                 statusCode: 200,
                 restaurants: []
             };
         }
+
+        let finalRestaurantInfos;
+        let restaurantError;
         if (onlyShowAvailableRestaurants) {
             // Find the DayIDs for the requested date and restaurantIDs.
+            let dayIDs;
+            let dayerror;
             if (filters.date !== "") {
                 query = `SELECT dayID FROM days WHERE date = ? AND isOpen = true AND restaurantID IN (?)`;
-                const [dayIDs, dayerror] = await pool.query(query, [datestring, restaurantIDs]);
-                if (dayerror) return {
-                    statusCode: 500,
-                    error: "Internal server error: unable to query days"
-                };
+                [dayIDs, dayerror] = await pool.query(query, [datestring, gottenIDs]);
                 if (dayIDs.length === 0) return {
                     statusCode: 200,
                     restaurants: []
                 };
             }else{
                 query = `SELECT dayID FROM days WHERE isOpen = true AND restaurantID IN (?)`;
-                const [dayIDs, dayerror] = await pool.query(query, [restaurantIDs]);
-                if (dayerror) return {
-                    statusCode: 500,
-                    error: "Internal server error: unable to query days"
-                };
+                dayIDs, dayerror = await pool.query(query, [gottenIDs]);
                 if (dayIDs.length === 0) return {
                     statusCode: 200,
                     restaurants: []
                 };
             }
             // Find ReservationIDs for the requested dayIDs at the given time.
+            let reservationIDs;
+            let reservationerror;
             if(filters.time !== ""){
                 query = `SELECT reservationID FROM reservations WHERE dayID IN (?) AND time = ?`;
-                const [reservationIDs, reservationerror] = await pool.query(query, [dayIDs, filters.time]);
-                
-                if (reservationerror) return {
-                    statusCode: 500,
-                    error: "Internal server error: unable to query reservations"
-                };
+                [reservationIDs, reservationerror] = await pool.query(query, [dayIDs, filters.time]);
                 if (reservationIDs.length === 0) return {
                     statusCode: 200,
                     restaurants: []
                 };
             } else {    
                 query = `SELECT reservationID FROM reservations WHERE dayID IN (?)`;
-                const [reservationIDs, reservationerror] =
+                [reservationIDs, reservationerror] =
                     await pool.query(query, [dayIDs]);
-                if (reservationerror) return {
-                    statusCode: 500,
-                    error: "Internal server error: unable to query reservations"
-                };
                 if (reservationIDs.length === 0) return {
                     statusCode: 200,
                     restaurants: []
@@ -153,18 +134,10 @@ export const handler = async (event) => {
             // Find TableIDs for the requested reservationIDs.
             query = `SELECT tableID FROM reservations WHERE reservationID IN (?)`;
             const [tableIDs, tableerror] = await pool.query(query, [reservationIDs]);
-            if (tableerror) return {
-                statusCode: 500,
-                error: "Internal server error: unable to query tables"
-            };
             // Now we have the tables that are in use at the requested date and time and restaurant.
             // We need to find the tables NOT included in this list, but INCLUDED in the restaurantIDs list.
             query = `SELECT tableID, seats, restaurantID FROM tables WHERE restaurantID IN (?)`;
             const [allTables, allTablesError] = await pool.query(query, [restaurantIDs]);
-            if (allTablesError) return {
-                statusCode: 500,
-                error: "Internal server error: unable to query tables"
-            };
             // Filter out the tablesIDs that are in use.
             let availableTables = allTables.filter(table => !tableIDs.includes(table.tableID));
             // Filter out the tables that are too small.
@@ -173,30 +146,23 @@ export const handler = async (event) => {
             const availableRestaurantIDs = availableTables.map(table => table.restaurantID);
             // Find the restaurant information for these restaurantIDs.
             query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
-            const [restaurants, restaurantError] = await pool.query(query, [availableRestaurantIDs]);
-            if (restaurantError) return {
-                statusCode: 500,
-                error: "Internal server error: unable to query restaurants"
-            };
+            [finalRestaurantInfos, restaurantError] = await pool.query(query, [availableRestaurantIDs]);
         } else {
             // Find the restaurant information for the restaurantIDs.
             query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
-            const [restaurants, restaurantError] = await pool.query(query, [restaurantIDs]);
-            if (restaurantError) return {
-                statusCode: 500,
-                error: "Internal server error: unable to query restaurants"
-            };
+            restaurantIDs = restaurantIDs.map(restaurant => restaurant.restaurantID);
+            [finalRestaurantInfos, restaurantError] = await pool.query(query, [restaurantIDs]);
         }
         return {
             statusCode: 200,
-            restaurants: restaurants
+            restaurants: finalRestaurantInfos
         };
-    } catch (error) {
-        return {
-            statusCode: 500,
-            error: "Internal server error",
-            error_verbose: error.message
-        };
-    }
+    // } catch (error) {
+    //     return {
+    //         statusCode: 500,
+    //         error: "Internal server error",
+    //         error_verbose: error.message
+    //     };
+    // }
 
 };
