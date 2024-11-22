@@ -2,8 +2,9 @@ import { connect } from "../opt/lib/connect.mjs";
 
 export const handler = async (event) => {
     let datestring = event.filters.date;
+    let requestedDate;
     try {
-        const requestedDate = new Date(datestring);
+        requestedDate = new Date(datestring);
     } catch (error) {
         return {
             statusCode: 400,
@@ -33,15 +34,16 @@ export const handler = async (event) => {
     };
 
     try {
+        let query;
         const filters = event.filters;
         const onlyShowAvailableRestaurants = filters.onlyShowAvailableRestaurants === "true";
         /**
          * If a filter is null, do not include it in the query.
          * filters: {
-         * “name" : “DAKA” | null,
-         * “date" : “12-30-2024” | null,
-         * “time" : “20:00” | null,
-         * “guestCount" : “4” | null,
+         * “name" : “DAKA” | "",
+         * “date" : “12-30-2024” | "",
+         * “time" : “20:00” | "",
+         * “guestCount" : “4”,
          * “onlyShowAvailableRestaurants" : “false” | “true” //  A restaurant is unavailable if there are no tables available for the requested date, time, and number of guests.
          * }
          * 
@@ -69,9 +71,9 @@ export const handler = async (event) => {
         // write a ListRestaurants query using all the filters.
 
         // IF name is not null
-        if (filters.name !== null) {
+        if (filters.name !== "") {
             // Find restaurantsIDs that fit the name query.
-            query = `SELECT restaurantID FROM Restaurants WHERE name = ? AND isActive = true`;
+            query = `SELECT restaurantID FROM restaurants WHERE name = ? AND isActive = true`;
             const [restaurantIDs, restauranterror] = await pool.query(query, [filters.name]);
             if (restauranterror) return {
                 statusCode: 500,
@@ -82,12 +84,15 @@ export const handler = async (event) => {
                 restaurants: []
             };
         }else{
+          
             // Find all restaurantIDs.
-            query = `SELECT restaurantID FROM Restaurants WHERE isActive = true`;
-            const [restaurantIDs, restauranterror] = await pool.query(query);
+            query = `SELECT restaurantID FROM restaurants`; //  WHERE isActive = true
+            const [restaurantIDs, restauranterror] = await pool.execute(query);
+            // return {"I got here": "true"};
             if (restauranterror) return {
                 statusCode: 500,
-                error: "Internal server error: unable to query restaurants"
+                error: "Internal server error: unable to query restaurants",
+                error_verbose: restauranterror
             };
             if (restaurantIDs.length === 0) return {
                 statusCode: 200,
@@ -96,8 +101,8 @@ export const handler = async (event) => {
         }
         if (onlyShowAvailableRestaurants) {
             // Find the DayIDs for the requested date and restaurantIDs.
-            if (filters.date !== null) {
-                query = `SELECT dayID FROM Days WHERE date = ? AND isOpen = true AND restaurantID IN (?)`;
+            if (filters.date !== "") {
+                query = `SELECT dayID FROM days WHERE date = ? AND isOpen = true AND restaurantID IN (?)`;
                 const [dayIDs, dayerror] = await pool.query(query, [datestring, restaurantIDs]);
                 if (dayerror) return {
                     statusCode: 500,
@@ -108,7 +113,7 @@ export const handler = async (event) => {
                     restaurants: []
                 };
             }else{
-                query = `SELECT dayID FROM Days WHERE isOpen = true AND restaurantID IN (?)`;
+                query = `SELECT dayID FROM days WHERE isOpen = true AND restaurantID IN (?)`;
                 const [dayIDs, dayerror] = await pool.query(query, [restaurantIDs]);
                 if (dayerror) return {
                     statusCode: 500,
@@ -120,8 +125,8 @@ export const handler = async (event) => {
                 };
             }
             // Find ReservationIDs for the requested dayIDs at the given time.
-            if(filters.time !== null){
-                query = `SELECT reservationID FROM Reservations WHERE dayID IN (?) AND time = ?`;
+            if(filters.time !== ""){
+                query = `SELECT reservationID FROM reservations WHERE dayID IN (?) AND time = ?`;
                 const [reservationIDs, reservationerror] = await pool.query(query, [dayIDs, filters.time]);
                 
                 if (reservationerror) return {
@@ -133,7 +138,7 @@ export const handler = async (event) => {
                     restaurants: []
                 };
             } else {    
-                query = `SELECT reservationID FROM Reservations WHERE dayID IN (?)`;
+                query = `SELECT reservationID FROM reservations WHERE dayID IN (?)`;
                 const [reservationIDs, reservationerror] =
                     await pool.query(query, [dayIDs]);
                 if (reservationerror) return {
@@ -146,7 +151,7 @@ export const handler = async (event) => {
                 };
             }
             // Find TableIDs for the requested reservationIDs.
-            query = `SELECT tableID FROM Reservations WHERE reservationID IN (?)`;
+            query = `SELECT tableID FROM reservations WHERE reservationID IN (?)`;
             const [tableIDs, tableerror] = await pool.query(query, [reservationIDs]);
             if (tableerror) return {
                 statusCode: 500,
@@ -154,7 +159,7 @@ export const handler = async (event) => {
             };
             // Now we have the tables that are in use at the requested date and time and restaurant.
             // We need to find the tables NOT included in this list, but INCLUDED in the restaurantIDs list.
-            query = `SELECT tableID, seats, restaurantID FROM Tables WHERE restaurantID IN (?)`;
+            query = `SELECT tableID, seats, restaurantID FROM tables WHERE restaurantID IN (?)`;
             const [allTables, allTablesError] = await pool.query(query, [restaurantIDs]);
             if (allTablesError) return {
                 statusCode: 500,
@@ -167,7 +172,7 @@ export const handler = async (event) => {
             // Find the restaurantIDs these tables belong to.
             const availableRestaurantIDs = availableTables.map(table => table.restaurantID);
             // Find the restaurant information for these restaurantIDs.
-            query = `SELECT name, address, isActive, openingTime, closingTime FROM Restaurants WHERE restaurantID IN (?)`;
+            query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
             const [restaurants, restaurantError] = await pool.query(query, [availableRestaurantIDs]);
             if (restaurantError) return {
                 statusCode: 500,
@@ -175,7 +180,7 @@ export const handler = async (event) => {
             };
         } else {
             // Find the restaurant information for the restaurantIDs.
-            query = `SELECT name, address, isActive, openingTime, closingTime FROM Restaurants WHERE restaurantID IN (?)`;
+            query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
             const [restaurants, restaurantError] = await pool.query(query, [restaurantIDs]);
             if (restaurantError) return {
                 statusCode: 500,
