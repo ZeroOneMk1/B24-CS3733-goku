@@ -54,6 +54,8 @@ export const handler = async (event) => {
                 restaurant: restaurant_name,
                 date: formattedDate,
                 time: time,
+                confirmation: confirmationCode,
+                guestCount: customerCount
             }
         }
     } catch (error) {

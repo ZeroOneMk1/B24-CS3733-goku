@@ -1,17 +1,6 @@
 import { connect } from "../opt/lib/connect.mjs";
-import { verify } from "../opt/lib/verify.mjs";
 
 export const handler = async (event) => {
-    const { decoded, error: authError } = await verify(event.jwt);
-    if (authError) return {
-        statusCode: 401,
-        error: authError
-    }
-
-    if (decoded.type != "admin") return {
-        statusCode: 401,
-        error: "User not authenticated"
-    }
 
     // create database connection
     const { pool, error: dbError } = await connect();
@@ -23,9 +12,10 @@ export const handler = async (event) => {
     try {
 
         const requestedReservationCode = event.confirmation;
+        const requestedReservationEmail = event.email;
         // get information about reservation
-        let infoquery = `SELECT * FROM reservations WHERE confirmationCode = ?`;
-        let [reservation_info, infoerror] = await pool.query(infoquery, [requestedReservationCode]);
+        let infoquery = `SELECT * FROM reservations WHERE confirmationCode = ? AND email = ?`;
+        let [reservation_info, infoerror] = await pool.query(infoquery, [requestedReservationCode, requestedReservationEmail]);
         if (reservation_info.length === 0) return {
             statusCode: 400,
             error: "Reservation does not exist"
@@ -43,18 +33,7 @@ export const handler = async (event) => {
         restaurant_name = restaurant_name[0].name;
         let [day_date, dateerror] = await pool.query(`SELECT date FROM days WHERE dayID = ?`, [dayID]);
 
-
-        let now = new Date();
         let reservationDate = new Date(day_date[0].date);
-        if (now > reservationDate) {
-            return {
-                statusCode: 400,
-                error: "Reservation date is in the past"
-            };
-        }
-        // remove reservation from database
-        let deletequery = `DELETE FROM reservations WHERE confirmationCode = ?`;
-        let [result, deleteerror] = await pool.query(deletequery, [requestedReservationCode]);
         let formattedDate = reservationDate.toISOString().split('T')[0];
         return {
             statusCode: 200,
