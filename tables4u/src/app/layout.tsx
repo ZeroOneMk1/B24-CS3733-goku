@@ -15,9 +15,9 @@ export default function Layout({
         <nav>
           <ul><li><a href="/">tables4u</a></li></ul>
           <ul>
-            <li><a href="/create">Create</a></li>
+            <li><a href="/create-restaurant">Create</a></li>
             <li><a href="/reserve">Reserve</a></li>
-            <li><a href="/manage">Manage</a></li>
+            <li><a href="/manage-restaurant">Manage</a></li>
           </ul>
           <ul><li><a href="/admin-login">Admin Login</a></li></ul>
         </nav>
