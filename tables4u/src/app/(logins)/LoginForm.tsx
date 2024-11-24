@@ -55,7 +55,7 @@ export default function LoginForm({
                 <div>
                     <p>{loginStatus}</p>
                     <input type="submit" value="Log in" />
-                    {type == "admin" && <a href="/manage">I already have a restaurant</a> }
+                    {type == "admin" && <a href="/owner-login">I already have a restaurant</a> }
                 </div>
             </form>
         </div>
