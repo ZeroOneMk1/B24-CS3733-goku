@@ -17,7 +17,7 @@ export default function Layout({
           <ul>
             <li><a href="/create">Create</a></li>
             <li><a href="/reserve">Reserve</a></li>
-            <li><a href="/manage">Manage</a></li>
+            <li><a href="/manage-restaurant">Manage Restaurant</a></li>
           </ul>
           <ul><li><a href="/admin-login">Admin Login</a></li></ul>
         </nav>
