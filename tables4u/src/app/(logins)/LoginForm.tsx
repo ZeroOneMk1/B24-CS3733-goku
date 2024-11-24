@@ -31,7 +31,7 @@ export default function LoginForm({
         if (result.statusCode === 200) {
             setLoginStatus("Login successful, redirecting...");
             document.cookie = "jwt=" + result.jwt
-            router.push('/manage');
+            router.push('/admin-dashboard');
         } else {
             setLoginStatus(result.error);
         }
