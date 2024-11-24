@@ -39,7 +39,7 @@ export default function LoginForm({
     }
 
     return (
-        <div className="admin-login-panel">
+        <div className="login-panel">
             <h1>{(type == "admin") ? "Administrator Login" : "Owner Login"}</h1>
             <form onSubmit={submit} method="post">
                 <div>
