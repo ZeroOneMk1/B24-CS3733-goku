@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 import type { JwtPayload } from './lib/jwtPayload';
 
-const protectedRoutes = ['/manage'];
+const protectedRoutes = ['/manage-restaurant'];
 
 export async function middleware(request: NextRequest) {
     const path = request.nextUrl.pathname
@@ -18,10 +18,9 @@ export async function middleware(request: NextRequest) {
             // attempt to verify token
             const secret = new TextEncoder().encode(process.env.JWT_SECRET);
             const { payload, protectedHeader: _protectedHeader } = await jwtVerify(token, secret);
-            const decoded = payload as JwtPayload;
+            const _decoded = payload as JwtPayload;
 
             // jwt is valid
-            console.log(decoded);
             return NextResponse.next();
         } catch(error) {
             // jwt is invalid, determine if user was previously an owner or admin
