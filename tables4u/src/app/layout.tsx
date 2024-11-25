@@ -4,6 +4,9 @@ export const metadata: Metadata = {
   description: "A CS3733 project created by team Goku.",
 };
 
+import './globals.css';
+import styles from './layout.module.css';
+
 export default function Layout({
   children,
 }: Readonly<{
@@ -12,8 +15,8 @@ export default function Layout({
   return (
     <html lang="en">
       <body>
-        <nav>
-          <ul><li><a href="/">tables4u</a></li></ul>
+        <nav id={styles.nav}>
+          <ul><li><a href="/"><strong>tables4u</strong></a></li></ul>
           <ul>
             <li><a href="/create-restaurant">Create</a></li>
             <li><a href="/reserve">Reserve</a></li>
@@ -21,7 +24,7 @@ export default function Layout({
           </ul>
           <ul><li><a href="/admin-dashboard">Admin Login</a></li></ul>
         </nav>
-        <main>{children}</main>
+        <main id={styles.main}>{children}</main>
       </body>
     </html>
   );
