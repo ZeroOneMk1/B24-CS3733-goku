@@ -51,7 +51,8 @@ export const handler = async (event) => {
     // try {
     let query;
     const filters = event.filters;
-    const onlyShowAvailableRestaurants = filters.onlyShowAvailableRestaurants === "true";
+    // TRUE if a date is provided, false otherwise.
+    const onlyShowAvailableRestaurants = filters.date !== "";
     /**
      * If a filter is null, do not include it in the query.
      * filters: {
@@ -89,21 +90,27 @@ export const handler = async (event) => {
     // IF name is not null
     if (filters.name !== "") {
         // Find restaurantIDs that fit the name query using partial matching.
-        query = `SELECT restaurantID FROM restaurants WHERE name LIKE ?`; //  AND isActive = true
+        query = `SELECT restaurantID FROM restaurants WHERE name LIKE ? AND isActive = true`; //  
         const searchTerm = `%${filters.name}%`;
         [restaurantIDs, restauranterror] = await pool.query(query, [searchTerm]);
-        if (restaurantIDs.length === 0) return {
-            statusCode: 200,
-            restaurants: []
-        };
+        if (restaurantIDs.length === 0) {
+            pool.end();
+            return {
+                statusCode: 200,
+                restaurants: []
+            };
+        }
     } else {
         // Find all restaurantIDs.
-        query = `SELECT restaurantID FROM restaurants`; //  WHERE isActive = true
+        query = `SELECT restaurantID FROM restaurants WHERE isActive = true`; //  
         [restaurantIDs, restauranterror] = await pool.query(query);
-        if (restaurantIDs.length === 0) return {
-            statusCode: 200,
-            restaurants: []
-        };
+        if (restaurantIDs.length === 0) {
+            pool.end();
+            return {
+                statusCode: 200,
+                restaurants: []
+            };
+        }
     }
 
     let finalRestaurantInfos;
@@ -112,62 +119,107 @@ export const handler = async (event) => {
         // Find the DayIDs for the requested date and restaurantIDs.
         let dayIDs;
         let dayerror;
-        if (filters.date !== "") {
-            query = `SELECT dayID FROM days WHERE date = ? AND isOpen = true AND restaurantID IN (?)`;
-            [dayIDs, dayerror] = await pool.query(query, [datestring, gottenIDs]);
-            if (dayIDs.length === 0) return {
-                statusCode: 200,
-                restaurants: []
-            };
-        } else {
-            query = `SELECT dayID FROM days WHERE isOpen = true AND restaurantID IN (?)`;
-            dayIDs, dayerror = await pool.query(query, [gottenIDs]);
-            if (dayIDs.length === 0) return {
+
+        // find the tables that can fit the guest count
+        let tablesthatfit;
+        query = `SELECT tableID, seats FROM tables WHERE seats >= ? AND restaurantID IN (?)`;
+        [tablesthatfit, tableerror] = await pool.query(query, [filters.guestCount, restaurantIDs]);
+        if (tablesthatfit.length === 0) {
+            pool.end();
+            return {
                 statusCode: 200,
                 restaurants: []
             };
         }
-        // Find ReservationIDs for the requested dayIDs at the given time.
-        let reservationIDs;
-        let reservationerror;
-        if (filters.time !== "") {
+        let tableIDs = tablesthatfit.map(table => table.tableID);
+        // filter the restaurants that don't have tables that can fit the guest count
+        query = `SELECT restaurantID FROM tables WHERE tableID IN (?)`;
+        [restaurantIDs, restauranterror] = await pool.query(query, [tableIDs]);
+        if (restaurantIDs.length === 0) {
+            pool.end();
+            return {
+                statusCode: 200,
+                restaurants: []
+            };
+        }
+        restaurantIDs = restaurantIDs.map(restaurant => restaurant.restaurantID);
+        // remove duplicates
+        restaurantIDs = [...new Set(restaurantIDs)];
+        let store_restaurantIDs = restaurantIDs;
+        // Find the DayIDs for the requested date and restaurantIDs.
+        query = `SELECT dayID FROM days WHERE date = ? AND isOpen = true AND restaurantID IN (?)`;
+        [dayIDs, dayerror] = await pool.query(query, [datestring, restaurantIDs]);
+        
+        // find restaurants that have that day open
+        query = `SELECT restaurantID FROM days WHERE dayID IN (?)`;
+        [restaurantIDs, restauranterror] = await pool.query(query, [dayIDs]);
+
+        // find difference between store_restaurantIDs and restaurantIDs
+        let noDayRestaurantIDs = store_restaurantIDs.filter(x => !restaurantIDs.includes(x));
+        noDayRestaurantIDs = noDayRestaurantIDs.map(restaurant => restaurant.restaurantID);
+        
+        let finalRestaurantIDs = noDayRestaurantIDs; // Store for later. Do more filtering on those that *do* have a day.
+
+        if (filters.time !== ""){
+            // for each table in tablesthatfit, find reservations on that day at that time.
+            let reservationIDs;
+            let reservationerror;
             query = `SELECT reservationID FROM reservations WHERE dayID IN (?) AND time = ?`;
             [reservationIDs, reservationerror] = await pool.query(query, [dayIDs, filters.time]);
-            if (reservationIDs.length === 0) return {
-                statusCode: 200,
-                restaurants: []
-            };
-        } else {
+
+            // remove tables from tablesthatfit that have reservations
+            query = `SELECT tableID FROM reservations WHERE reservationID IN (?)`;
+            let reservedTables;
+            [reservedTables, tableerror] = await pool.query(query, [reservationIDs]);
+            let reservedTableIDs = reservedTables.map(table => table.tableID);
+            tablesthatfit = tablesthatfit.filter(table => !reservedTableIDs.includes(table.tableID));
+            tableIDs = tablesthatfit.map(table => table.tableID);
+            // find restaurants that have tables that are not reserved
+            query = `SELECT restaurantID FROM tables WHERE tableID IN (?)`;
+            [restaurantIDs, restauranterror] = await pool.query(query, [tableIDs]);
+            restaurantIDs = restaurantIDs.map(restaurant => restaurant.restaurantID);
+            // remove duplicates
+            restaurantIDs = [...new Set(restaurantIDs)];
+            // add theses restaurants to the finalRestaurantIDs
+            finalRestaurantIDs = finalRestaurantIDs.concat(restaurantIDs);
+
+            // Get the info!
+            query = 'SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)';
+            [finalRestaurantInfos, restaurantError] = await pool.query(query, [finalRestaurantIDs]);
+        }else{
+            // find all reservations for that day
+            let reservationIDs;
+            let reservationerror;
             query = `SELECT reservationID FROM reservations WHERE dayID IN (?)`;
-            [reservationIDs, reservationerror] =
-                await pool.query(query, [dayIDs]);
-            if (reservationIDs.length === 0) return {
-                statusCode: 200,
-                restaurants: []
-            };
+            [reservationIDs, reservationerror] = await pool.query(query, [dayIDs]);
+            // find tables that are not reserved
+            query = `SELECT tableID FROM reservations WHERE reservationID IN (?)`;
+            let reservedTables;
+            [reservedTables, tableerror] = await pool.query(query, [reservationIDs]);
+            let reservedTableIDs = reservedTables.map(table => table.tableID);
+            tablesthatfit = tablesthatfit.filter(table => !reservedTableIDs.includes(table.tableID));
+            tableIDs = tablesthatfit.map(table => table.tableID);
+            // find restaurants that have tables that are not reserved
+            query = `SELECT restaurantID FROM tables WHERE tableID IN (?)`;
+            [restaurantIDs, restauranterror] = await pool.query(query, [tableIDs]);
+            restaurantIDs = restaurantIDs.map(restaurant => restaurant.restaurantID);
+            // remove duplicates
+            restaurantIDs = [...new Set(restaurantIDs)];
+            // add theses restaurants to the finalRestaurantIDs
+            finalRestaurantIDs = finalRestaurantIDs.concat(restaurantIDs);
+
+            // Get the info!
+            query = 'SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)';
+            [finalRestaurantInfos, restaurantError] = await pool.query(query, [finalRestaurantIDs]);
         }
-        // Find TableIDs for the requested reservationIDs.
-        query = `SELECT tableID FROM reservations WHERE reservationID IN (?)`;
-        const [tableIDs, tableerror] = await pool.query(query, [reservationIDs]);
-        // Now we have the tables that are in use at the requested date and time and restaurant.
-        // We need to find the tables NOT included in this list, but INCLUDED in the restaurantIDs list.
-        query = `SELECT tableID, seats, restaurantID FROM tables WHERE restaurantID IN (?)`;
-        const [allTables, allTablesError] = await pool.query(query, [restaurantIDs]);
-        // Filter out the tablesIDs that are in use.
-        let availableTables = allTables.filter(table => !tableIDs.includes(table.tableID));
-        // Filter out the tables that are too small.
-        availableTables = availableTables.filter(table => table.seats >= filters.guestCount);
-        // Find the restaurantIDs these tables belong to.
-        const availableRestaurantIDs = availableTables.map(table => table.restaurantID);
-        // Find the restaurant information for these restaurantIDs.
-        query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
-        [finalRestaurantInfos, restaurantError] = await pool.query(query, [availableRestaurantIDs]);
+        
     } else {
         // Find the restaurant information for the restaurantIDs.
         query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
         restaurantIDs = restaurantIDs.map(restaurant => restaurant.restaurantID);
         [finalRestaurantInfos, restaurantError] = await pool.query(query, [restaurantIDs]);
     }
+    pool.end();
     return {
         statusCode: 200,
         restaurants: finalRestaurantInfos
