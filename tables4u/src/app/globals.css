@@ -1,0 +1,84 @@
+/* fonts */
+@font-face {
+    font-family: 'Poppins';
+    src: url('../../public/fonts/Poppins-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Poppins';
+    src: url('../../public/fonts/Poppins-Bold.woff2') format('woff2');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root {
+    /* fonts */
+    font-size: 62.5%; /* (62.5/100) * 16px = 10px */
+    --font-size--small: 1.4rem; /* 14px */
+    --font-size--default: 1.6rem; /* 16px */
+    --font-size--large: 2.4rem; /* 24px */
+
+    /* colors */
+    --color--accent-1: #65b3d1;
+    --color--accent-2: #daa669;
+    --color--background: #dadcde;
+    --color--foreground: #f6f6f7;
+    --color--placeholder: #939597;
+    --color--text: #0e0e0e;
+
+    /* default values */
+    color: var(--color--text);
+}
+
+body {
+    background-color: var(--color--background);
+    margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins';
+}
+
+h1 {
+    font-size: var(--font-size--large);
+}
+
+button, a, p, div {
+    font-family: 'Poppins';
+    font-size: var(--font-size--default);
+}
+
+input, select {
+    font-size: var(--font-size--default);
+    font-family: 'Poppins';
+    color: var(--color--text);
+    border: 1px solid var(--color--text);
+    border-radius: 0.2em;
+    background-color: var(--color--foreground);
+}
+
+::placeholder {
+    color: var(--color--placeholder);
+}
+
+button, input[type="submit"] {
+    color: var(--color--text);
+    background-color: var(--color--accent-2);
+    border: none;
+    outline: none;
+    padding: 0.4em 1.2em;
+    border-radius: 1.5em;
+    cursor: pointer;
+}
+
+a {
+    color: var(--color--text);
+}
+
+button.small {
+    padding: 0.2em;
+}
