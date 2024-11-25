@@ -1,9 +1,10 @@
 'use client';
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Restaurants from './Restaurants';
 
 export default function AdminDashboard() {
-
+    const router = useRouter();
     const [restaurantList, setRestaurantList] = useState([]);
     const [listError, setListError] = useState("Loading restaurants...");
 
@@ -32,6 +33,11 @@ export default function AdminDashboard() {
         }
     }
 
+    function logout() {
+        document.cookie = "jwt=;";
+        router.push("/");
+    }
+
     useEffect(() => {
         let ignore = false;
         
@@ -44,6 +50,7 @@ export default function AdminDashboard() {
             <h1>Administrator Dashboard</h1>
             <p id="admin-restaurant-list-error">{listError}</p>
             <Restaurants restaurantsInfo={restaurantList}/>
+            <button onClick={logout}>Logout</button>
         </div>
     );
 }
