@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 import type { JwtPayload } from './lib/jwtPayload';
 
-const protectedRoutes = ['/manage-restaurant'];
+const protectedRoutes = ['/manage-restaurant', '/admin-dashboard'];
 
 export async function middleware(request: NextRequest) {
     const path = request.nextUrl.pathname
@@ -12,7 +12,12 @@ export async function middleware(request: NextRequest) {
     if (isProtectedRoute) {
         // grab token and check if it exists
         const token = request.cookies.get("jwt")?.value;
-        if (!token) return NextResponse.redirect(new URL('/owner-login', request.url));
+        if (!token) {
+            // determine what login to send the user to
+            if (path == '/manage-restaurant') return NextResponse.redirect(new URL('/owner-login', request.url));
+            else if (path == '/admin-dashboard') return NextResponse.redirect(new URL('/admin-login', request.url));
+            return NextResponse.redirect(new URL('/', request.url));
+        }
 
         try {
             // attempt to verify token
