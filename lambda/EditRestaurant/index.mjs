@@ -1,6 +1,5 @@
 import { connect } from "../opt/lib/connect.mjs";
 import { verify } from "../opt/lib/verify.mjs";
-import mysql from 'mysql2/promise';
 
 export const handler = async (event) => {
   const { decoded, error: authError } = await verify(event.jwt);
@@ -24,8 +23,9 @@ export const handler = async (event) => {
   // Check if restaurant name already exists
   const checkRestaurantNameExists = async (name) => {
     try {
-      const [rows] = await pool.execute("SELECT * FROM restaurants WHERE name = ?", [name]);
-      return rows.length > 0; // true if name exists
+      const [rows] = await pool.execute("SELECT restaurantID FROM restaurants WHERE name = ?", [name]);
+      if (rows[0] && rows[0].restaurantID != decoded.restaurantID ) return true;
+      return false;
     } catch (error) {
       throw error;
     }
@@ -54,27 +54,31 @@ export const handler = async (event) => {
   try {
     const nameExists = await checkRestaurantNameExists(event.name);
     if (nameExists) {
+      pool.end();
       return {
         statusCode: 400,
         error: "Restaurant name already exists"
       };
     }
 
-    if (isValidTime(event.open)) {
+    if (!isValidTime(event.openingTime)) {
+      pool.end();
       return {
         statusCode: 400,
         error: "Invalid open time"
       };
     }
 
-    if (isValidTime(event.close)) {
+    if (!isValidTime(event.closingTime)) {
+      pool.end();
       return {
         statusCode: 400,
         error: "Invalid close time"
       };
     }
 
-    if (event.open >= event.close) {
+    if (event.openingTime >= event.closingTime) {
+      pool.end();
       return {
         statusCode: 400,
         error: "Open time must be earlier than close time"
@@ -82,15 +86,15 @@ export const handler = async (event) => {
     }
 
     // Attempt to update the restaurant
-    const rest_result = await editRestaurant(event.name, event.address, event.opentime, event.closetime);
+    const rest_result = await editRestaurant(event.name, event.address, event.openingTime, event.closingTime);
 
     const response = {
       statusCode: 200,
       result: {
         name: event.name,
         address: event.address,
-        open: event.opentime,
-        close: event.closetime
+        open: event.openingTime,
+        close: event.closingTime
       }
     };
 
