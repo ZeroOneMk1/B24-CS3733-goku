@@ -96,6 +96,11 @@ export default function List() {
             const data = await response.json();
             //console.log("API Response:", data);  //log API response
             setRestaurants(data.restaurants || []);  //update restaurants list or set empty array
+            if(data.restaurants == undefined || data.restaurants.length < 0) {
+                setError("No active restaurants");
+            } else {
+                setError("");
+            }
         } else {
             setError("Error fetching data: " + response.statusText);
         }
@@ -120,9 +125,7 @@ export default function List() {
                         </li>
                     ))}
                 </ul>
-            ) : (
-                <p>No restaurants found.</p>
-            )}
+            ):(<br></br>)}
             <p>{error}</p>
          </div>
     );
