@@ -77,6 +77,7 @@ export default function List() {
     };
 
     async function listActiveRestaurants() {
+        setError("Retrieving active restaurants...");
         const response = await fetch("https://c63up2fh1i.execute-api.us-east-1.amazonaws.com/i1/ListRestaurants", {
             method: "POST",
             headers: {
