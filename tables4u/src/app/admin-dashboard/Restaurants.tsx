@@ -38,7 +38,9 @@ function Restaurant({
     const [deleteStatus, setDeleteStatus ] = useState("");
 
     async function deleteRestaurant() {
-        setDeleteStatus("Working...");
+        if (!window.confirm(`Are you sure you want to delete ${restaurantInfo.name}?\n
+            This action cannot be undone.`)) return;
+        setDeleteStatus("Deleting...");
         const url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/DeleteRestaurant";
         const body = JSON.stringify({
             jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2),
@@ -54,13 +56,6 @@ function Restaurant({
         }
     }
 
-    function isActiveDisplay() {
-        if(restaurantInfo.isActive == true) {
-            return "Active"
-        }
-        return "Inactive"
-    }
-
     function timeDisplay(time:number) {
         if(time == undefined) {
             return "00:00";
@@ -74,10 +69,10 @@ function Restaurant({
         <div className="restaurant">
             <p>{restaurantInfo.name}</p>
             <p>{restaurantInfo.address}</p>
-            <p>{isActiveDisplay()}</p>
+            <p>{restaurantInfo.isActive == true ? "Active" : "Inactive"}</p>
             <p>Opens: {timeDisplay(restaurantInfo.openingTime)}</p>
             <p>Closes: {timeDisplay(restaurantInfo.closingTime)}</p>
-            <button className="delete-restaurant-button" onClick={deleteRestaurant}>DELETE RESTAURANT</button>
+            <button className="delete-restaurant-button" onClick={deleteRestaurant}>Delete Restaurant</button>
             <p>{deleteStatus}</p>
         </div>
     );
