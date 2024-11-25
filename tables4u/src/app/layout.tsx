@@ -22,7 +22,7 @@ export default function Layout({
             <li><a href="/reserve">Reserve</a></li>
             <li><a href="/manage-restaurant">Manage</a></li>
           </ul>
-          <ul><li><a href="/admin-login">Admin Login</a></li></ul>
+          <ul><li><a href="/admin-dashboard">Admin Login</a></li></ul>
         </nav>
         <main id={styles.main}>{children}</main>
       </body>

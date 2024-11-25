@@ -3,10 +3,12 @@ import { useState, useEffect } from "react";
 import BasicInformation from "./BasicInformation";
 import Tables from "./Tables";
 import DeleteRestaurant from "./DeleteRestaurant";
+import { useRouter } from 'next/navigation';
 
 const getCookie = (name: string) => document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`))?.at(2);
 
 export default function Manage() {
+    const router = useRouter();
     const [ restaurantInfoStatus, setRestaurantInfoStatus ] = useState("waiting");
     const [ restaurantInfo, setRestaurantInfo] = useState({
         name: "",
@@ -54,6 +56,11 @@ export default function Manage() {
         } else setRestaurantInfoStatus(result.error);
     }
 
+    function logout() {
+        document.cookie = "jwt=;";
+        router.push("/");
+    }
+
     // grab restaurant info on load
     useEffect(() => { getRestaurantInfo(); }, []);
 
@@ -82,6 +89,7 @@ export default function Manage() {
                         tablesInfo={tablesInfo}
                         propogateTablesInfo={setTablesInfo}/>
                     <DeleteRestaurant restaurantInfo={restaurantInfo}/>
+                    <button onClick={logout}>Logout</button>
                 </div>
             }
         </div>
