@@ -8,12 +8,13 @@
 }
 
 #loginForm h1 {
-    margin-bottom: 3em;
+    margin-bottom: 2em;
 }
 
 #loginForm form {
     display: flex;
     flex-direction: column;
+    gap: 1em;
 }
 
 #loginForm form>div {
@@ -43,5 +44,5 @@
 }
 
 #loginStatus {
-    height: 1em;
+    height: var(--font-size--default);
 }
