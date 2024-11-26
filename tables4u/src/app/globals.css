@@ -45,12 +45,18 @@ body {
     flex-direction: column;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1, h2, h3, h4, h5, h6, p {
     font-family: 'Poppins';
+    margin: 0;
 }
 
 h1 {
     font-size: var(--font-size--large);
+    margin-bottom: 0.7em;
+}
+
+h2 {
+    font-size: var(--font-size--default);
 }
 
 button, a, p, div {
