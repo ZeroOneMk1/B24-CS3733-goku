@@ -31,14 +31,15 @@ export default function LoginForm({
         if (result.statusCode === 200) {
             setLoginStatus("Login successful, redirecting...");
             document.cookie = "jwt=" + result.jwt
-            router.push('/admin-dashboard');
+            if (type == "admin") router.push("/admin-dashboard");
+            else router.push("/manage-restaurant");
         } else {
             setLoginStatus(result.error);
         }
     }
 
     return (
-        <div className="admin-login-panel">
+        <div className="login-panel">
             <h1>{(type == "admin") ? "Administrator Login" : "Owner Login"}</h1>
             <form onSubmit={submit} method="post">
                 <div>
@@ -54,7 +55,8 @@ export default function LoginForm({
                 <div>
                     <p>{loginStatus}</p>
                     <input type="submit" value="Log in" />
-                    {type == "admin" && <a href="/manage">I already have a restaurant</a> }
+                    {type == "admin" && <a href="/owner-login">I want to login as a restaurant owner</a> }
+                    {type == "owner" && <a href="/admin-login">I want to login as an administrator</a>}
                 </div>
             </form>
         </div>

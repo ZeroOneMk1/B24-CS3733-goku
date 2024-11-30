@@ -2,10 +2,25 @@ import { connect } from "../opt/lib/connect.mjs";
 import { verify } from "../opt/lib/verify.mjs";
 
 export const handler = async (event) => {
-  const { decoded, error: authError } = verify(event.jwt);
+  if (!event.number) return {
+    statusCode: 400,
+    error: "Table number not provided"
+  }
+
+  if (!event.seats) return {
+    statusCode: 400,
+    error: "Number of seats not provided"
+  }
+
+  if (event.seats < 1 || event.seats > 8) return {
+    statusCode: 400,
+    error: "Invalid number of seats"
+  }
+
+  const { decoded, error: authError } = await verify(event.jwt);
   if (authError) return {
     statusCode: 401,
-    error: "Unauthorized"
+    error: authError
   }
 
   if (decoded.isAdmin) return {
@@ -28,6 +43,7 @@ export const handler = async (event) => {
     ]);
 
     if (editTableResults.affectedRows == 0) {
+      pool.end();
       return {
         statusCode: 400,
         error: "Invalid restaurant or table number"
@@ -35,6 +51,7 @@ export const handler = async (event) => {
     }
 
     if (editTableResults.changedRows == 0) {
+      pool.end();
       return {
         statusCode: 400,
         error: "Number of seats is the same as existing value"
@@ -43,12 +60,14 @@ export const handler = async (event) => {
 
     // select all seats and return to users
     const [selectTablesResults, _selectTablesFields] = await pool.execute(
-      "select number, seats from tables where restaurantID = ? ", [decoded.restaurantID]);
+      "select number, seats from tables where restaurantID = ? order by number", [decoded.restaurantID]);
+    pool.end();
     return {
       statusCode: 200,
       body: JSON.stringify({ tables: selectTablesResults }),
     };
   } catch (error) {
+    pool.end();
     return {
       statusCode: 500,
       error: "Internal server error: unable to edit table"

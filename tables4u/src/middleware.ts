@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 import type { JwtPayload } from './lib/jwtPayload';
 
-const protectedRoutes = ['/manage'];
+const protectedRoutes = ['/manage-restaurant', '/admin-dashboard'];
 
 export async function middleware(request: NextRequest) {
     const path = request.nextUrl.pathname
@@ -12,7 +12,12 @@ export async function middleware(request: NextRequest) {
     if (isProtectedRoute) {
         // grab token and check if it exists
         const token = request.cookies.get("jwt")?.value;
-        if (!token) return NextResponse.redirect(new URL('/owner-login', request.url));
+        if (!token) {
+            // determine what login to send the user to
+            if (path == '/manage-restaurant') return NextResponse.redirect(new URL('/owner-login', request.url));
+            else if (path == '/admin-dashboard') return NextResponse.redirect(new URL('/admin-login', request.url));
+            return NextResponse.redirect(new URL('/', request.url));
+        }
 
         try {
             // attempt to verify token
@@ -21,8 +26,15 @@ export async function middleware(request: NextRequest) {
             const decoded = payload as JwtPayload;
 
             // jwt is valid
-            console.log(decoded);
-            return NextResponse.next();
+            if (path == '/manage-restaurant' && decoded.isAdmin
+                || path == '/admin-dashboard' && !decoded.isAdmin) {
+                
+                // redirect to correct login
+                const redirectURL = (decoded.isAdmin) ? "/owner-login" : "/admin-login";
+                const response = NextResponse.redirect(new URL(redirectURL, request.url));
+                response.cookies.delete("jwt");
+                return response;
+            }
         } catch(error) {
             // jwt is invalid, determine if user was previously an owner or admin
             const decoded = JSON.parse(atob(token.split(".")[1])) as JwtPayload;
@@ -37,6 +49,7 @@ export async function middleware(request: NextRequest) {
 
     return NextResponse.next();
 }
+
 
 export const config = {
     matcher: [
