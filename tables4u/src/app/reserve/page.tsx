@@ -114,90 +114,9 @@ export default function List() {
         return () => { ignore = true; }
     },[]);
 
-    return (
-         <div id="find-restaurant">
-            <h1>Active Restaurants</h1>
-            {restaurants.length > 0 ? (
-                <ul>
-                    {restaurants.map((restaurant, index) => (
-                        <li key={index}>
-                            <h3>{restaurant.name}</h3>
-                            <p>{restaurant.address}</p>
-                        </li>
-                    ))}
-                </ul>
-            ):(<br></br>)}
-            <p>{error}</p>
-         </div>
-    );
-
     // return (
-    //     <div id="find-restaurant">
-    //         <h1>Find a Restaurant</h1>
-    //         <form onSubmit={submit} method="post">
-    //             <div>
-    //                 {/* Restaurant Name Input */}
-    //                 <div className="find-input">
-    //                     <label htmlFor="name">Restaurant Name:</label>
-    //                     <input 
-    //                         type="text" 
-    //                         name="name" 
-    //                         placeholder="Restaurant Name (Leave empty to show all)"
-    //                         value={name} 
-    //                         onChange={(e) => setName(e.target.value)} 
-    //                     />
-    //                 </div>
-
-    //                 {/* Date Input */}
-    //                 <div className="find-input">
-    //                     <label htmlFor="date">Day:</label>
-    //                     <input 
-    //                         required 
-    //                         type="date" 
-    //                         name="date" 
-    //                         value={date} 
-    //                         onChange={(e) => setDate(e.target.value)} 
-    //                     />
-    //                 </div>
-
-    //                 {/* Time Input */}
-    //                 <div className="find-input">
-    //                     <label htmlFor="time">Time:</label>
-    //                     <input 
-    //                         required 
-    //                         type="time" 
-    //                         name="time" 
-    //                         value={time} 
-    //                         onChange={(e) => setTime(e.target.value)} 
-    //                     />
-    //                 </div>
-
-    //                 {/* Guest Count Input */}
-    //                 <div className="find-input">
-    //                     <label htmlFor="guestCount">Guest Count:</label>
-    //                     <select 
-    //                         name="guestCount" 
-    //                         value={guestCount} 
-    //                         onChange={(e) => setGuestCount(e.target.value)}>
-    //                         <option value="1">1</option>
-    //                         <option value="2">2</option>
-    //                         <option value="3">3</option>
-    //                         <option value="4">4</option>
-    //                         <option value="5">5</option>
-    //                         <option value="6">6</option>
-    //                         <option value="7">7</option>
-    //                         <option value="8">8</option>
-    //                     </select>
-    //                 </div> 
-    //             </div>
-    //             <button type="submit">Search</button>
-    //         </form>
-
-    //         {/* Show loading or error */}
-    //         {loading && <p>Loading...</p>}
-    //         {error && <p>{error}</p>}
-
-    //         {/* Display restaurants if found */}
+    //      <div id="find-restaurant">
+    //         <h1>Active Restaurants</h1>
     //         {restaurants.length > 0 ? (
     //             <ul>
     //                 {restaurants.map((restaurant, index) => (
@@ -207,11 +126,92 @@ export default function List() {
     //                     </li>
     //                 ))}
     //             </ul>
-    //         ) : (
-    //             <p>No restaurants found.</p>
-    //         )}
-    //     </div>
+    //         ):(<br></br>)}
+    //         <p>{error}</p>
+    //      </div>
     // );
+
+    return (
+        <div id="find-restaurant">
+            <h1>Find a Restaurant</h1>
+            <form onSubmit={submit} method="post">
+                <div>
+                    {/* Restaurant Name Input */}
+                    <div className="find-input">
+                        <label htmlFor="name">Restaurant Name:</label>
+                        <input 
+                            type="text" 
+                            name="name" 
+                            placeholder="Restaurant Name (Leave empty to show all)"
+                            value={name} 
+                            onChange={(e) => setName(e.target.value)} 
+                        />
+                    </div>
+
+                    {/* Date Input */}
+                    <div className="find-input">
+                        <label htmlFor="date">Day:</label>
+                        <input 
+                            required 
+                            type="date" 
+                            name="date" 
+                            value={date} 
+                            onChange={(e) => setDate(e.target.value)} 
+                        />
+                    </div>
+
+                    {/* Time Input */}
+                    <div className="find-input">
+                        <label htmlFor="time">Time:</label>
+                        <input 
+                            required 
+                            type="time" 
+                            name="time" 
+                            value={time} 
+                            onChange={(e) => setTime(e.target.value)} 
+                        />
+                    </div>
+
+                    {/* Guest Count Input */}
+                    <div className="find-input">
+                        <label htmlFor="guestCount">Guest Count:</label>
+                        <select 
+                            name="guestCount" 
+                            value={guestCount} 
+                            onChange={(e) => setGuestCount(e.target.value)}>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                        </select>
+                    </div> 
+                </div>
+                <button type="submit">Search</button>
+            </form>
+
+            {/* Show loading or error */}
+            {loading && <p>Loading...</p>}
+            {error && <p>{error}</p>}
+
+            {/* Display restaurants if found */}
+            {restaurants.length > 0 ? (
+                <ul>
+                    {restaurants.map((restaurant, index) => (
+                        <li key={index}>
+                            <h3>{restaurant.name}</h3>
+                            <p>{restaurant.address}</p>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p>No restaurants found.</p>
+            )}
+        </div>
+    );
 }
 
 
