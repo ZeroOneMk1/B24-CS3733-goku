@@ -1,4 +1,5 @@
 import { FormEvent, useState, useEffect } from "react";
+import styles from "./Tables.module.css";
 
 export default function Tables({
     isActive,
@@ -34,7 +35,8 @@ export default function Tables({
     }
 
     if (!isActive) {return (
-        <div id="tables">
+        <div id={styles.tables}>
+            <h2>Tables</h2>
             {tablesInfo.map(table => (
                 <Table key={table.number} tableInfo={table} propogateTablesInfo={propogateTablesInfo}/>
             ))}
@@ -42,7 +44,8 @@ export default function Tables({
             <p>{addTableStatus}</p>
         </div>
     )} else {return(
-        <div id="tables">
+        <div id={styles.tablesActive}>
+            <h2>Tables</h2>
             {tablesInfo.map(table => (
                 <p key={table.number}>Table {table.number}: {table.seats} seats</p>
             ))}
@@ -129,13 +132,13 @@ function Table({
     }
 
     return(
-        <div className="table">
+        <div className={styles.table}>
             <form onSubmit={changed? editTable : deleteTable}>
-                <p>Table {tableInfo.number}</p>
+                <p className={styles.tableNumber}>Table {tableInfo.number}:</p>
                 <input type="number" name="seats" id="seats" min="1" max="8" value={seatsValue}
                     onChange={event => setSeatsValue(Number(event.target.value))}/>
-                <label htmlFor="seats">seats</label>
-                <input type="submit" value={buttonText} />
+                <label className={styles.tableSeats} htmlFor="seats">seats</label>
+                <input className="small" type="submit" value={buttonText}/>
                 <p>{errorMessage}</p>
             </form>
         </div>
