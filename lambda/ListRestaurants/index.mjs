@@ -216,6 +216,17 @@ export const handler = async (event) => {
         query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
         [finalRestaurantInfos, restaurantError] = await pool.query(query, [availableRestaurantIDs]);
     } else {
+        if (filters.time !== "") {
+            // isolate the hour from the time string HH:MM to HH
+            let timestring = filters.time.split(":")[0];
+            // remove all non-numeric characters
+            timestring = timestring.replace(/\D/g, "");
+            let timeint = parseInt(timestring);
+            // remove restaurants that open after or close before the requested time
+            query = `SELECT restaurantID FROM restaurants WHERE restaurantID IN (?) AND openingTime <= ? AND closingTime > ?`;
+            const [validRestaurants, validRestaurantsError] = await pool.query(query, [restaurantIDs, timeint, timeint]);
+            restaurantIDs = validRestaurants.map(restaurant => restaurant.restaurantID);
+        }
         // Find the restaurant information for the restaurantIDs.
         query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
         [finalRestaurantInfos, restaurantError] = await pool.query(query, [restaurantIDs]);
