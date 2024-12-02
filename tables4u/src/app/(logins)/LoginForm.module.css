@@ -45,4 +45,5 @@
 
 #loginStatus {
     height: var(--font-size--default);
+    padding-bottom: 0.5em;
 }
