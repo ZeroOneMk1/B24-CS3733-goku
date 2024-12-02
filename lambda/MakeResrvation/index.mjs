@@ -93,13 +93,57 @@ export const handler = async (event) => {
       return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     };
 
+    const timeToHour = (timeStr) => {
+      return parseInt(timeStr, 10);  // Simply parse the string as an integer
+    };
+
+    const getOpenTime = async (restaurantID) => {
+      const [rows] = await pool.query(
+        "SELECT openingTime FROM restaurants WHERE restaurantID = ?",
+        [restaurantID]
+      );
+      if (rows.length === 0) {
+        return null;  
+      }
+      return timeToHour(rows[0].openingTime);  // Convert opening time to an integer hour
+    };
+    
+    const getCloseTime = async (restaurantID) => {
+      const [rows] = await pool.query(
+        "SELECT closingTime FROM restaurants WHERE restaurantID = ?",
+        [restaurantID]
+      );
+      if (rows.length === 0) {
+        return null;  
+      }
+      return timeToHour(rows[0].closingTime);  // Convert closing time to an integer hour
+    };
+
+    //check that time must be less then closetime
+    const validTime = (openingTime, closingTime, reservationTime) => {
+      if (reservationTime >= openingTime && reservationTime < closingTime) {
+        return true;
+      }
+      return false;  
+    };
+
     const makeReservation = async (name, email, restaurantName, date, customerCount, time) => {
       if (!restaurantName) {
         throw new Error("Restaurant name is required.");
       }
 
+      
       const restaurantID = await getRestaurantID(restaurantName);
       const formattedDate = formatDate(date);
+      const openingTime = await getOpenTime(restaurantID);
+      const numbertime = parseInt(openingTime);
+      
+      const closingTime = await getCloseTime(restaurantID);
+
+      const timeIsValid = validTime(openingTime, closingTime, time);
+      if(!timeIsValid){
+        throw new Error("invalid reservation time");
+      }
 
       const open = await isRestaurantOpen(restaurantID, formattedDate);
       if (!open) {
