@@ -188,13 +188,13 @@ export const handler = async (event) => {
         query = `SELECT tableID, seats, restaurantID FROM tables WHERE restaurantID IN (?)`;
         const [allTables, allTablesError] = await pool.query(query, [restaurantIDs]);
         // Filter out the tablesIDs that are in use. This depends on Time
-        let availableTables;
+        let availableTables = [];
         if (filters.time !== "") {
             availableTables = allTables.filter(table => !tableIDs.includes(table.tableID));
         }else{
             // If time is not specified, only tables that are booked for every time the restaurant is open are available
             // This will need more SQL queries
-            for(table of allTables){
+            for(const table of allTables){
                 // get the reservations for this table on the requested day
                 query = `SELECT reservationID FROM reservations WHERE tableID = ? AND dayID IN (?)`;
                 let [reservations, reservationsError] = await pool.query(query, [table.tableID, dayIDs]);
