@@ -178,15 +178,36 @@ export const handler = async (event) => {
                 };
             }
         }
+        reservationIDs = reservationIDs.map(reservationIDs => reservationIDs.reservationID);
         // Find TableIDs for the requested reservationIDs.
         query = `SELECT tableID FROM reservations WHERE reservationID IN (?)`;
-        const [tableIDs, tableerror] = await pool.query(query, [reservationIDs]);
+        let [tableIDs, tableerror] = await pool.query(query, [reservationIDs]);
+        tableIDs = tableIDs.map(tableIDs => tableIDs.tableID);
         // Now we have the tables that are in use at the requested date and time and restaurant.
         // We need to find the tables NOT included in this list, but INCLUDED in the restaurantIDs list.
         query = `SELECT tableID, seats, restaurantID FROM tables WHERE restaurantID IN (?)`;
         const [allTables, allTablesError] = await pool.query(query, [restaurantIDs]);
-        // Filter out the tablesIDs that are in use.
-        let availableTables = allTables.filter(table => !tableIDs.includes(table.tableID));
+        // Filter out the tablesIDs that are in use. This depends on Time
+        let availableTables;
+        if (filters.time !== "") {
+            availableTables = allTables.filter(table => !tableIDs.includes(table.tableID));
+        }else{
+            // If time is not specified, only tables that are booked for every time the restaurant is open are available
+            // This will need more SQL queries
+            for(table of allTables){
+                // get the reservations for this table on the requested day
+                query = `SELECT reservationID FROM reservations WHERE tableID = ? AND dayID IN (?)`;
+                let [reservations, reservationsError] = await pool.query(query, [table.tableID, dayIDs]);
+                // get the restaurant's opening and closing time
+                query = `SELECT openingTime, closingTime FROM restaurants WHERE restaurantID = ?`;
+                let [restaurantTimes, restaurantTimesError] = await pool.query(query, [table.restaurantID]);
+                // check if the table is booked for every time the restaurant is open
+                // ! This assumes that each reservation is 1 hour.
+                if(reservations.length < restaurantTimes[0].closingTime - restaurantTimes[0].openingTime){
+                    availableTables.push(table);
+                }
+            }
+        }
         // Filter out the tables that are too small.
         availableTables = availableTables.filter(table => table.seats >= filters.guestCount);
         // Find the restaurantIDs these tables belong to.
@@ -199,6 +220,7 @@ export const handler = async (event) => {
         query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
         [finalRestaurantInfos, restaurantError] = await pool.query(query, [restaurantIDs]);
     }
+    pool.end();
     return {
         statusCode: 200,
         restaurants: finalRestaurantInfos
