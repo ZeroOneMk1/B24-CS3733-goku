@@ -4,6 +4,7 @@ import BasicInformation from "./BasicInformation";
 import Tables from "./Tables";
 import DeleteRestaurant from "./DeleteRestaurant";
 import { useRouter } from 'next/navigation';
+import styles from './page.module.css';
 
 const getCookie = (name: string) => document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`))?.at(2);
 
@@ -65,21 +66,23 @@ export default function Manage() {
     useEffect(() => { getRestaurantInfo(); }, []);
 
     return (
-        <div id="content">
+        <div>
             { restaurantInfoStatus == "waiting" && 
                 <div id="restaurant-details-placeholder">
+                    <h1>Restaurant Details</h1>
                     <p>Waiting...</p>
                 </div>
             }
             { (restaurantInfoStatus !== "waiting" && restaurantInfoStatus !== "success") && 
                 <div id="restaurant-details-placeholder">
+                    <h1>Restaurant Details</h1>
                     <h2>Oops!</h2>
                     <p>{restaurantInfoStatus}</p>
                     <button>Try Again</button>
                 </div>
             }
             { restaurantInfoStatus == "success" &&
-                <div id="restaurant-details">
+                <div id={styles.restaurantDetails}>
                     <h1>Restaurant Details</h1>
                     <BasicInformation
                         restaurantInfo={restaurantInfo}
