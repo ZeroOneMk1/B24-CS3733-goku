@@ -57,15 +57,17 @@ export const handler = async (event) => {
         [restaurantID, customerCount, restaurantID, dayID, time]
       );
 
-      console.log(`Available tables for restaurantID: ${restaurantID}, dayID: ${dayID}, customerCount: ${customerCount}, time: ${time}`, rows);
-
-      const availableTable = rows.find(row => row.seats >= customerCount);
-
+      if (rows.length === 0) {
+        return null; 
+      }
+    
+      const availableTable = rows.sort((a, b) => (a.seats - customerCount) - (b.seats - customerCount))[0];
+    
       if (availableTable) {
         console.log(`Available table found: Table number: ${availableTable.number}, tableID: ${availableTable.tableID}`);
         return availableTable.tableID;
       }
-
+    
       return null;
     };
 
