@@ -13,8 +13,8 @@ export const handler = async (event) => {
     };
 
     const generateReservationDetails = () => {
-      const reservationID = crypto.randomUUID(); // Generate UUID for reservationID
-      const confirmationCode = Math.floor(100000 + Math.random() * 900000); // Random confirmation code
+      const reservationID = crypto.randomUUID();
+      const confirmationCode = Math.floor(100000 + Math.random() * 900000);
       return { reservationID, confirmationCode };
     };
 
@@ -29,53 +29,76 @@ export const handler = async (event) => {
       return rows[0].restaurantID;
     };
 
+    const getDayID = async (restaurantID, date) => {
+      const [rows] = await pool.query(
+        "SELECT dayID FROM days WHERE restaurantID = ? AND date = ?",
+        [restaurantID, date]
+      );
+      if (rows.length === 0) {
+        return null;  // No dayID found
+      }
+      return rows[0].dayID;  // Return the existing dayID
+    };
+
     const isRestaurantOpen = async (restaurantID, date) => {
       const [rows] = await pool.query(
         "SELECT * FROM days WHERE restaurantID = ? AND date = ?",
         [restaurantID, date]
       );
       if (rows.length === 0) {
-        return true;  // Restaurant is open if no record exists for that date
+        return true;  //if no day entry exists assume open
       }
-      return rows[0].isOpen === 1;  // Restaurant is open if isOpen is 1
+      return rows[0].isOpen === 1;  
     };
 
     const checkTableAvailability = async (restaurantID, dayID, customerCount, time) => {
       const [rows] = await pool.query(
-        "SELECT * FROM tables WHERE restaurantID = ? AND seats >= ? AND number NOT IN (SELECT tableID FROM reservations WHERE restaurantID = ? AND dayID = ? AND time = ?)",
+        "SELECT tableID, number, seats FROM tables WHERE restaurantID = ? AND seats >= ? AND number NOT IN (SELECT tableID FROM reservations WHERE restaurantID = ? AND dayID = ? AND time = ?)",
         [restaurantID, customerCount, restaurantID, dayID, time]
       );
-      return rows.length > 0 ? rows[0].number : null;
+
+      console.log(`Available tables for restaurantID: ${restaurantID}, dayID: ${dayID}, customerCount: ${customerCount}, time: ${time}`, rows);
+
+      const availableTable = rows.find(row => row.seats >= customerCount);
+
+      if (availableTable) {
+        console.log(`Available table found: Table number: ${availableTable.number}, tableID: ${availableTable.tableID}`);
+        return availableTable.tableID;
+      }
+
+      return null;
     };
 
     const createNewDayIfNeeded = async (restaurantID, date) => {
       const [rows] = await pool.query(
-        "SELECT * FROM days WHERE restaurantID = ? AND date = ?",
+        "SELECT dayID FROM days WHERE restaurantID = ? AND date = ?",
         [restaurantID, date]
       );
+    
       if (rows.length === 0) {
-        const dayID = crypto.randomUUID();  // Generate a new dayID (UUID)
+        const dayID = crypto.randomUUID(); 
+        console.log(`Creating new day entry for dayID: ${dayID} on date: ${date}`);
         await pool.query(
           "INSERT INTO days (dayID, date, isOpen, restaurantID) VALUES (?, ?, ?, ?)",
-          [dayID, date, 1, restaurantID]  // Mark the new day as open by default
+          [dayID, date, 1, restaurantID] 
         );
         return dayID;
       }
+    
       return rows[0].dayID;
     };
 
     const formatDate = (date) => {
       const [month, day, year] = date.split('/');
-      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`; // Convert to YYYY-MM-DD format
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     };
 
-    const makeReservation = async (name, email, restaurantName, date, customerCount) => {
+    const makeReservation = async (name, email, restaurantName, date, customerCount, time) => {
       if (!restaurantName) {
         throw new Error("Restaurant name is required.");
       }
 
-      const restaurantID = await getRestaurantID(restaurantName);  // Get restaurantID based on restaurant name
-
+      const restaurantID = await getRestaurantID(restaurantName);
       const formattedDate = formatDate(date);
 
       const open = await isRestaurantOpen(restaurantID, formattedDate);
@@ -84,24 +107,25 @@ export const handler = async (event) => {
       }
 
       const { reservationID, confirmationCode } = generateReservationDetails();
-
-      const dayID = await createNewDayIfNeeded(restaurantID, formattedDate);
+      
+      let dayID = await getDayID(restaurantID, formattedDate);
+      if (!dayID) {
+        dayID = await createNewDayIfNeeded(restaurantID, formattedDate);  // Create a new dayID if it doesn't exist
+      }
 
       const availableTable = await checkTableAvailability(restaurantID, dayID, customerCount, time);
       if (!availableTable) {
         throw new Error("No available table for the specified customer count.");
       }
 
-      // Ensure customerCount is a number
       const customerCountNumber = Number(customerCount);
       if (isNaN(customerCountNumber)) {
         throw new Error("Customer count must be a valid number.");
       }
 
-      // Insert reservation, fixing the query parameters
       const [result] = await pool.query(
-        "INSERT INTO reservations (reservationID, customerCount, dayID, tableID, email, confirmationCode) VALUES (?, ?, ?, ?, ?, ?)",
-        [reservationID, customerCountNumber, dayID, availableTable, email, confirmationCode]
+        "INSERT INTO reservations (reservationID, customerCount, dayID, tableID, email, confirmationCode, time) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [reservationID, customerCountNumber, dayID, availableTable, email, confirmationCode, time]
       );
 
       return {
@@ -118,9 +142,10 @@ export const handler = async (event) => {
     const reservationDetails = await makeReservation(
       event.name,
       event.email,
-      event.restaurant,  // Pass the restaurant name from the input
+      event.restaurant,
       event.date,
-      event.customerCount
+      event.customerCount,
+      event.time
     );
 
     return {
