@@ -91,10 +91,9 @@ export default function BasicInformation({
     )} else {return(
         <div id={styles.basicInformationActive} >
             <h2>Basic Information</h2>
-            <p>Restaurant is <strong>{activeLabel}</strong></p>
-            <p>Name: <strong>{restaurantInfo.name}</strong></p>
-            <p>Address: <strong>{restaurantInfo.address}</strong></p>
-            <p>Schedule: <strong>{restaurantInfo.openingTime}</strong> to <strong>{restaurantInfo.closingTime}</strong></p>
+            <p>{restaurantInfo.name}</p>
+            <p>{restaurantInfo.address}</p>
+            <p>Open <strong>{restaurantInfo.openingTime}</strong> to <strong>{restaurantInfo.closingTime}</strong></p>
         </div>
     )}
 }
