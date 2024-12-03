@@ -34,17 +34,30 @@
     color: var(--color--text);
 }
 
+html, body {
+    height: 100%;
+}
+
 body {
     background-color: var(--color--background);
     margin: 0;
+    display: flex;
+    flex-direction: column;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1, h2, h3, h4, h5, h6, p {
     font-family: 'Poppins';
+    margin: 0;
 }
 
 h1 {
     font-size: var(--font-size--large);
+    margin-bottom: 0.7em;
+}
+
+h2 {
+    font-size: var(--font-size--default);
+    margin-bottom: 0.5em;
 }
 
 button, a, p, div {
@@ -79,6 +92,6 @@ a {
     color: var(--color--text);
 }
 
-button.small {
-    padding: 0.2em;
+button.small, input[type="submit"].small {
+    padding: 0 0.5em;
 }

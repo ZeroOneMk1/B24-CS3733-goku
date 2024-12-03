@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import styles from './BasicInformation.module.css';
 
 export default function BasicInformation({
     restaurantInfo,
@@ -52,43 +53,47 @@ export default function BasicInformation({
     }
 
     if (!restaurantInfo.isActive) {return (
-        <div id="basic-information">
+        <div id={styles.basicInformation}>
+            <h2>Basic Information</h2>
             <form onSubmit={editRestaurant}>
-                <p>Restaurant is <strong>{activeLabel}</strong></p>
-                <button disabled={activateRestaurantStatus == "Activating..."}
-                    onClick={activateRestaurant}>Activate</button>
-                <p>{activateRestaurantStatus}</p>
-                <div className="input-group">
-                    <label htmlFor="restaurant-name">Name:</label>
+                <div>
+                    <div className={styles.inputGroup}>
+                        <p>Restaurant is <strong>{activeLabel}</strong></p>
+                        <button className="small" disabled={activateRestaurantStatus == "Activating..."}
+                            onClick={activateRestaurant}>Activate</button>
+                    </div>
+                    <p>{activateRestaurantStatus}</p>
+                 </div>
+                <div className={styles.inputGroup}>
+                    <label id={styles.nameLabel} htmlFor="restaurant-name">Name:</label>
                     <input id="restaurant-name" type="text" value={restaurantInfo.name}
                         onChange={event => modifyRestaurantInfo({name: event.target.value})}/>
                 </div>
-                <div className="input-group">
-                    <label htmlFor="restaurant-address">Address:</label>
+                <div className={styles.inputGroup}>
+                    <label id={styles.addressLabel} htmlFor="restaurant-address">Address:</label>
                     <input id="restaurant-address" type="text" value={restaurantInfo.address}
                         onChange={event => modifyRestaurantInfo({address: event.target.value})}/>
                 </div>
-                <div className="input-group">
-                    <label htmlFor="restaurant-opening-time">Opening Time:</label>
+                <div className={styles.inputGroup}>
+                    <label id={styles.scheduleLabel} htmlFor="restaurant-opening-time">Schedule:</label>
                     <input id="restaurant-opening-time" type="number" value={restaurantInfo.openingTime}
+                        min="0" max="24"
                         onChange={event => modifyRestaurantInfo({openingTime: event.target.value})}/>
-                </div>
-                <div className="input-group">
-                    <label htmlFor="restaurant-closing-time">Closing Time:</label>
+                    <p>to</p>
                     <input id="restaurant-closing-time" type="number" value={restaurantInfo.closingTime}
+                        min="0" max="24"
                         onChange={event => modifyRestaurantInfo({closingTime: event.target.value})}/>
                 </div>
-                <p>{editRestaurantStatus}</p>
                 <input type="submit" value="Save Information" />
+                <p id={styles.editStatus} >{editRestaurantStatus}</p>
             </form>
         </div>
     )} else {return(
-        <div id="basic-information">
-            <p>Restaurant is <strong>{activeLabel}</strong></p>
-            <p>Name: {restaurantInfo.name}</p>
-            <p>Address: {restaurantInfo.address}</p>
-            <p>Opening Time: {restaurantInfo.openingTime}</p>
-            <p>Closing Time: {restaurantInfo.closingTime}</p>
+        <div id={styles.basicInformationActive} >
+            <h2>Basic Information</h2>
+            <p>{restaurantInfo.name}</p>
+            <p>{restaurantInfo.address}</p>
+            <p>Open <strong>{restaurantInfo.openingTime}</strong> to <strong>{restaurantInfo.closingTime}</strong></p>
         </div>
     )}
 }
