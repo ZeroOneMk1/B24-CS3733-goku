@@ -80,7 +80,7 @@ export default function CreateRestaurant() {
                 </div>
                 <div>
                     <input type="submit" value="Create" />
-                    <a href="/manage">I already have a restaurant</a>
+                    <a href="/manage-restaurant">I already have a restaurant</a>
                 </div>
             </form>
             <p>{createStatus}</p>
