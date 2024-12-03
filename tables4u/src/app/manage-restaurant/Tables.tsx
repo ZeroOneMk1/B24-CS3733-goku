@@ -46,6 +46,7 @@ export default function Tables({
     )} else {return(
         <div id={styles.tablesActive}>
             <h2>Tables</h2>
+            <p>{tablesInfo.length} tables, {tablesInfo.reduce((a, c) => a + c.seats, 0)} seats</p>
             {tablesInfo.map(table => (
                 <p key={table.number}>Table {table.number}: {table.seats} seats</p>
             ))}

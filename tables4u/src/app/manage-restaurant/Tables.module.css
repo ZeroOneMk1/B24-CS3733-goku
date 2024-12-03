@@ -28,3 +28,7 @@
 .tableSeats {
     flex-grow: 1;
 }
+
+#tablesActive {
+    margin-bottom: 1em;
+}
