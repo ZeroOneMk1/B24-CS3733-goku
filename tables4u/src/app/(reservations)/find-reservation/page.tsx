@@ -36,7 +36,7 @@ export default function FindReservation({
 
     // render the reservation info if valid, and the find reservation page if not
     if (validCode && email) { return (
-        <ReservationInfo code={code} email={email}/>
+        <ReservationInfo code={code} email={email} canDelete={true} />
     )} else  { return (
          <div>
             <h1>Find Reservation</h1>
