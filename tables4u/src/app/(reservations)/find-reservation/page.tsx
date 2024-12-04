@@ -1,19 +1,19 @@
 'use client';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import ReservationInfo from '../ReservationInfo';
 import { FormEvent } from 'react';
 
-export default function FindReservation() {
-    const searchParams = useSearchParams();
+export default function FindReservation({
+    searchParams
+}: {
+    searchParams: { code?: string, email?: string}
+}) {
     const router = useRouter();
 
     // grab query params
-    const code = Number(searchParams.get("code"));
-    const email = searchParams.get("email");
-
-    // check for partial URL parameter and remove them if invalid
+    const code = Number(searchParams.code);
+    const email = searchParams.email;
     const validCode = code && !isNaN(code);
-    if (validCode && !email || email && !validCode) router.push("/find-reservation");
 
     // populate URL query parameters upon form submit
     function findReservation(event: FormEvent<HTMLFormElement>) {
@@ -38,7 +38,7 @@ export default function FindReservation() {
     if (validCode && email) { return (
         <ReservationInfo code={code} email={email}/>
     )} else  { return (
-        <div>
+         <div>
             <h1>Find Reservation</h1>
             <form onSubmit={findReservation}>
                 <label htmlFor="email">Email</label>
