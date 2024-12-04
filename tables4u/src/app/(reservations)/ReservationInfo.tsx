@@ -54,7 +54,6 @@ export default function ReservationInfo({
 
     function formatDateAndTime(date: string, time: number) {
         // parse date
-        console.log(date);
         const dateSplit = date.split("-");
         const dateObject = new Date(
             Number(dateSplit[0]),
