@@ -1,13 +1,14 @@
+import { useContext } from 'react';
 import styles from './Schedule.module.css';
 
-export default function Schedule({
+import { RestaurantInfoContext, TablesInfoContext } from './contexts';
 
-}: {
+export default function Schedule() {
+    const { restaurantInfo } = useContext(RestaurantInfoContext);
 
-}) {
     return (
         <div id={styles.schedule}>
-            <Times />
+            <Times open={restaurantInfo.openingTime} close={restaurantInfo.closingTime}/>
             <div id={styles.gridContainer}>
                 <Tables />
                 <div id={styles.grid}>
@@ -18,27 +19,31 @@ export default function Schedule({
     )
 }
 
-function Times() {
+function Times({ open, close }: { open: number, close: number }) {
+    // only render every other hour if possible and necessary
+    const hoursOpen = close - open;
+    const delta = (hoursOpen % 2 == 0 && hoursOpen >= 10) ? 2 : 1;
+
+    const hours = []
+    for (let i = open; i <= close; i += delta) hours.push(i);
+
     return (
         <div id={styles.times}>
-            <p>1pm</p>
-            <p>3pm</p>
-            <p>5pm</p>
-            <p>7pm</p>
-            <p>9pm</p>
-            <p>11pm</p>
+            { hours.map((hour) => (
+                <p key={hour}>{hour}</p>
+            ))}
         </div>
     )
 }
 
 function Tables() {
+    const { tablesInfo } = useContext(TablesInfoContext);
+
     return (
         <div id={styles.tables}>
-            <p>Table 1</p>
-            <p>Table 2</p>
-            <p>Table 3</p>
-            <p>Table 4</p>
-            <p>Table 5</p>
+            { tablesInfo.map((table) => (
+                <p key={table.number}>Table {table.number} ({table.seats})</p>
+            ))}
         </div>
     )
 }
