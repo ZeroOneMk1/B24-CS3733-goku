@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 
-//define reservation
+// Define reservation interface
 interface Reservation {
     email: string;
     time: string;
@@ -12,14 +12,15 @@ interface Reservation {
 
 export default function ReservationForm() {
     const [date, setDate] = useState('');
-    const [reservations, setReservations] = useState<Reservation[]>([]); 
+    const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [utilReport, setUtilReport] = useState<number | null>(null);  // State for utilReport
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    //format date
+    // Format date function
     const formatDate = (inputDate: string) => {
         const [year, month, day] = inputDate.split('-');
-        return `${month}-${day}-${year}`; 
+        return `${month}-${day}-${year}`;
     };
 
     async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -27,31 +28,31 @@ export default function ReservationForm() {
         setError('');
         event.preventDefault();
 
-        //clear past reservations
+
         setReservations([]);
+        setUtilReport(null);
 
         const apiEndpoint = process.env.NEXT_PUBLIC_FUNCTION_URL + "/ReviewDaysAvailability";
-        
-        //get jwt
-        const jwt =document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2);
-        
+
+
+        const jwt = document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2);
+
         if (!jwt) {
             setError('JWT is missing');
             setLoading(false);
             return;
         }
 
-        //format date
+        
         const formattedDate = formatDate(date);
 
         const body = JSON.stringify({ date: formattedDate, jwt });
 
         try {
-            //POST
             const response = await fetch(apiEndpoint, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json', 
+                    'Content-Type': 'application/json',
                 },
                 body,
             });
@@ -60,11 +61,12 @@ export default function ReservationForm() {
 
             if (response.ok) {
                 setReservations(result.response.reservations);
+                setUtilReport(result.response.utilReport);  
             } else {
                 setError('No reservations found for this date');
             }
         } catch (err) {
-            setError('Error');
+            setError('Error occurred');
         } finally {
             setLoading(false);
         }
@@ -92,6 +94,11 @@ export default function ReservationForm() {
 
             {error && <p>{error}</p>}
             {loading && <p>Loading...</p>}
+
+            {/* utilreport */}
+            {utilReport !== null && (
+                <p>Utilization Report: {(utilReport * 100)}%</p>
+            )}
 
             {/* reservations */}
             <ul>
