@@ -1,19 +1,11 @@
-import { FormEvent, useState, useEffect } from "react";
+import { FormEvent, useState, useEffect, useContext } from "react";
 import styles from "./Tables.module.css";
 
-export default function Tables({
-    isActive,
-    tablesInfo,
-    propogateTablesInfo
-}: {
-    isActive: boolean,
-    tablesInfo: {
-        number: number,
-        seats: number
-    }[],
-    propogateTablesInfo: (arr: []) => void
-}) {
+import { TablesInfoContext } from "./page";
+
+export default function Tables({ isActive }: { isActive: boolean }) {
     const [ addTableStatus, setAddTableStatus ] = useState(" ");
+    const { tablesInfo, setTablesInfo } = useContext(TablesInfoContext);
 
     async function addTable() {
         setAddTableStatus("Adding...");
@@ -28,7 +20,7 @@ export default function Tables({
 
         if (result.statusCode == 200) {
             const tables = JSON.parse(result.body).tables;
-            propogateTablesInfo(tables);
+            setTablesInfo(tables);
             setAddTableStatus("Table added.");
             setTimeout(() => {setAddTableStatus(" ")}, 2000);
         } else setAddTableStatus(result.error);
@@ -38,7 +30,7 @@ export default function Tables({
         <div id={styles.tables}>
             <h2>Tables</h2>
             {tablesInfo.map(table => (
-                <Table key={table.number} tableInfo={table} propogateTablesInfo={propogateTablesInfo}/>
+                <Table key={table.number} tableInfo={table} />
             ))}
             <button disabled={addTableStatus == "Adding..."} onClick={addTable}>Add Table</button>
             <p>{addTableStatus}</p>
@@ -54,16 +46,12 @@ export default function Tables({
     )}
 }
 
-function Table({
-    tableInfo,
-    propogateTablesInfo
-}: {
-    tableInfo: { number: number, seats: number },
-    propogateTablesInfo: (arr: []) => void
-}) {
+function Table({ tableInfo }: { tableInfo: { number: number, seats: number } }) {
     const [ seatsValue, setSeatsValue ] = useState(tableInfo.seats);
     const [ status, setStatus ] = useState("idle");
     const [ errorMessage, setErrorMessage ] = useState(" ");
+
+    const { setTablesInfo } = useContext(TablesInfoContext);
 
     const changed = seatsValue != tableInfo.seats;
     const jwt = document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2);
@@ -100,7 +88,7 @@ function Table({
             setStatus("idle");
             setErrorMessage(" ");
             const tables = JSON.parse(result.body).tables;
-            propogateTablesInfo(tables);
+            setTablesInfo(tables);
         } else {
             setStatus("error");
             setErrorMessage(result.error);
@@ -125,7 +113,7 @@ function Table({
             setStatus("idle");
             setErrorMessage(" ");
             const tables = JSON.parse(result.body).tables;
-            propogateTablesInfo(tables);
+            setTablesInfo(tables);
         } else {
             setStatus("error");
             setErrorMessage(result.error);

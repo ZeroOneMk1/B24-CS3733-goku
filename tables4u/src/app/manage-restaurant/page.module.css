@@ -1,5 +1,43 @@
-#restaurantDetails {
+#content {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    gap: 1em;
+}
+
+#restaurantDetails, #restaurantDetailsPlaceholder {
     width: 20em;
     display: flex;
     flex-direction: column;
+}
+
+#reviewAvailability {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+#availabilityHeader {
+    width: 100%;
+    margin-bottom: 0.5em;
+}
+
+#availabilityHeader h1 {
+    margin: 0;
+}
+
+#availabilityHeader>div {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5em;
+}
+
+#availabilityHeader form, #toggleDay {
+    display: flex;
+    gap: 1em;
+    align-items: center;
+}
+
+#availabilityHeader input[type="date"] {
+    width: 9em;
 }

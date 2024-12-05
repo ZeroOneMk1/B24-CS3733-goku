@@ -1,17 +1,40 @@
 'use client';
-import { useState, useEffect } from "react";
-import BasicInformation from "./BasicInformation";
-import Tables from "./Tables";
-import DeleteRestaurant from "./DeleteRestaurant";
+import { useState, useEffect, createContext, useContext } from "react";
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 
-const getCookie = (name: string) => document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`))?.at(2);
+import BasicInformation from "./BasicInformation";
+import Tables from "./Tables";
+import DeleteRestaurant from "./DeleteRestaurant";
+import Schedule from "./Schedule";
 
-export default function Manage() {
-    const router = useRouter();
-    const [ restaurantInfoStatus, setRestaurantInfoStatus ] = useState("waiting");
-    const [ restaurantInfo, setRestaurantInfo] = useState({
+export type RestaurantInfo = {
+    name: string
+    address: string
+    isActive: boolean
+    openingTime: number
+    closingTime: number
+};
+
+export type TablesInfo = {
+    number: number
+    seats: number
+}[];
+
+// this code is effectively meaningless & is primarily to make the TS compiler happy
+// the purpose is to allow distant children to read & write restaurantInfo and tablesInfo
+export const RestaurantInfoContext = createContext<{
+    restaurantInfo: RestaurantInfo
+    setRestaurantInfo: (r: RestaurantInfo) => void
+}>({restaurantInfo: {} as RestaurantInfo, setRestaurantInfo: () => {}});
+
+export const TablesInfoContext = createContext<{
+    tablesInfo: TablesInfo
+    setTablesInfo: (r: TablesInfo) => void
+}>({tablesInfo: {} as TablesInfo, setTablesInfo: () => {}});
+
+export default function ManageRestaurant() {
+    const [ restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo>({
         name: "",
         address: "",
         isActive: false,
@@ -24,15 +47,13 @@ export default function Manage() {
         seats: 0
     }]);
 
-    let restaurantID: string | null = null;
-
-    function modifyRestaurantInfo(obj: object) {
-        setRestaurantInfo({ ...Object.assign(restaurantInfo, obj) });
-    }
+    const [ restaurantInfoStatus, setRestaurantInfoStatus ] = useState("waiting");
 
     async function getRestaurantInfo() {
         const url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/GetRestaurantInfo";
-        const body = JSON.stringify({ jwt: getCookie("jwt") })
+        const body = JSON.stringify({
+            jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2)
+        })
 
         const response = await fetch(url, { method: "POST", body });
         const result = await response.json();
@@ -53,48 +74,75 @@ export default function Manage() {
                 tables.push({ number: table.number, seats: table.seats });
             setTablesInfo(tables);
 
-            restaurantID = info.restaurantID;
+            // restaurantID = info.restaurantID;
         } else setRestaurantInfoStatus(result.error);
     }
+
+    useEffect(() => { getRestaurantInfo(); }, []);
+
+    if (restaurantInfoStatus == "waiting") { return (
+        <div id={styles.restaurantDetailsPlaceholder}>
+            <h1>Waiting...</h1>
+        </div>
+    )} else if (restaurantInfoStatus !== "success") { return (
+        <div id={styles.restaurantDetailsPlaceholder}>
+            <h1>Oops!</h1>
+            <p>{restaurantInfoStatus}</p>
+            <button>Try Again</button>
+        </div>
+    )} else { return (
+        <RestaurantInfoContext.Provider value={{restaurantInfo, setRestaurantInfo}}>
+            <TablesInfoContext.Provider value={{tablesInfo, setTablesInfo}}>
+                <div id={styles.content}>
+                    <RestaurantDetails />
+                    <ReviewAvailability />
+                </div>
+            </TablesInfoContext.Provider>
+        </RestaurantInfoContext.Provider>
+    )}
+}
+
+function RestaurantDetails() {
+    const router = useRouter();
+    const { restaurantInfo } = useContext(RestaurantInfoContext);
 
     function logout() {
         document.cookie = "jwt=;";
         router.push("/");
     }
 
-    // grab restaurant info on load
-    useEffect(() => { getRestaurantInfo(); }, []);
-
     return (
-        <div>
-            { restaurantInfoStatus == "waiting" && 
-                <div id="restaurant-details-placeholder">
-                    <h1>Restaurant Details</h1>
-                    <p>Waiting...</p>
-                </div>
-            }
-            { (restaurantInfoStatus !== "waiting" && restaurantInfoStatus !== "success") && 
-                <div id="restaurant-details-placeholder">
-                    <h1>Restaurant Details</h1>
-                    <h2>Oops!</h2>
-                    <p>{restaurantInfoStatus}</p>
-                    <button>Try Again</button>
-                </div>
-            }
-            { restaurantInfoStatus == "success" &&
-                <div id={styles.restaurantDetails}>
-                    <h1>Restaurant Details</h1>
-                    <BasicInformation
-                        restaurantInfo={restaurantInfo}
-                        modifyRestaurantInfo={modifyRestaurantInfo} />
-                    <Tables
-                        isActive={restaurantInfo.isActive}
-                        tablesInfo={tablesInfo}
-                        propogateTablesInfo={setTablesInfo}/>
-                    <DeleteRestaurant restaurantInfo={restaurantInfo}/>
-                    <button onClick={logout}>Logout</button>
-                </div>
-            }
+        <div id={styles.restaurantDetails}>
+            <h1>Restaurant Details</h1>
+            <BasicInformation />
+            <Tables isActive={restaurantInfo.isActive} />
+            <DeleteRestaurant restaurantInfo={restaurantInfo}/>
+            <button onClick={logout}>Logout</button>
         </div>
-    );
+    )
+}
+
+function ReviewAvailability() {
+    return (
+        <div id={styles.reviewAvailability}>
+            <div id={styles.availabilityHeader}>
+                <div>
+                    <h1>Review Availability</h1>
+                    <p>Total Reservations: <strong>0 (0% Util.)</strong></p>
+                </div>
+                <div>
+                    <form>
+                        <label htmlFor="day">Day:</label>
+                        <input type="date" name="day" id="day" />
+                        <input type="submit" value="Refresh" />
+                    </form>
+                    <div id={styles.toggleDay}>
+                        <p>Day is <strong>Open</strong></p>
+                        <button className="small">Close</button>
+                    </div>
+                </div>
+            </div>
+            <Schedule />
+        </div>
+    )
 }

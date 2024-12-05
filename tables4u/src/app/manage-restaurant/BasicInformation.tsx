@@ -1,22 +1,18 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useContext } from "react";
 import styles from './BasicInformation.module.css';
 
-export default function BasicInformation({
-    restaurantInfo,
-    modifyRestaurantInfo
-}: {
-    restaurantInfo: {
-        name: string,
-        address: string,
-        isActive: boolean,
-        openingTime: number,
-        closingTime: number,
-    }
-    modifyRestaurantInfo: (obj: object) => void
-}) {
+import { RestaurantInfoContext } from "./page";
+
+export default function BasicInformation() {
+    const { restaurantInfo, setRestaurantInfo } = useContext(RestaurantInfoContext);
+
     const [ editRestaurantStatus, setEditRestaurantStatus ] = useState(" ");
     const [ activateRestaurantStatus, setActivateRestaurantStatus ] = useState(" ");
     const activeLabel = restaurantInfo.isActive ? "active" : "inactive";
+
+    function modifyRestaurantInfo(obj: object) {
+        setRestaurantInfo({ ...Object.assign(restaurantInfo, obj) });
+    }
 
     async function editRestaurant(event: FormEvent<HTMLFormElement>) {
         setEditRestaurantStatus("Saving...");
