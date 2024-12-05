@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 
-// Define reservation interface
+//reservation
 interface Reservation {
     email: string;
     time: string;
@@ -10,31 +10,34 @@ interface Reservation {
     tableNumber: string;
 }
 
+//set states
 export default function ReservationForm() {
     const [date, setDate] = useState('');
     const [reservations, setReservations] = useState<Reservation[]>([]);
-    const [utilReport, setUtilReport] = useState<number | null>(null);  // State for utilReport
+    const [utilReport, setUtilReport] = useState<number | null>(null);  
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    // Format date function
+    //format date
     const formatDate = (inputDate: string) => {
         const [year, month, day] = inputDate.split('-');
         return `${month}-${day}-${year}`;
     };
 
+    //form
     async function submit(event: React.FormEvent<HTMLFormElement>) {
         setLoading(true);
         setError('');
         event.preventDefault();
 
-
+        //clear reservations
         setReservations([]);
         setUtilReport(null);
 
+        //set endpoint
         const apiEndpoint = process.env.NEXT_PUBLIC_FUNCTION_URL + "/ReviewDaysAvailability";
 
-
+        //get jwt
         const jwt = document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2);
 
         if (!jwt) {
@@ -47,7 +50,7 @@ export default function ReservationForm() {
         const formattedDate = formatDate(date);
 
         const body = JSON.stringify({ date: formattedDate, jwt });
-
+        //connect to endpoint
         try {
             const response = await fetch(apiEndpoint, {
                 method: 'POST',
@@ -58,7 +61,7 @@ export default function ReservationForm() {
             });
 
             const result = await response.json();
-
+            //grab the response
             if (response.ok) {
                 setReservations(result.response.reservations);
                 setUtilReport(result.response.utilReport);  
@@ -100,7 +103,7 @@ export default function ReservationForm() {
                 <p>Utilization Report: {(utilReport * 100)}%</p>
             )}
 
-            {/* reservations */}
+            {/* reservations */} 
             <ul>
                 {reservations.map((reservation, index) => (
                     <li key={index}>
