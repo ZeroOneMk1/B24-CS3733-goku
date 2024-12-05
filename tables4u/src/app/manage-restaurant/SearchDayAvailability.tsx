@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import Cookies from 'js-cookie';
 
 //define reservation
 interface Reservation {
@@ -34,7 +33,7 @@ export default function ReservationForm() {
         const apiEndpoint = process.env.NEXT_PUBLIC_FUNCTION_URL + "/ReviewDaysAvailability";
         
         //get jwt
-        const jwt = Cookies.get('jwt');
+        const jwt =document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2);
         
         if (!jwt) {
             setError('JWT is missing');
