@@ -1,7 +1,7 @@
 import { FormEvent, useState, useEffect, useContext } from "react";
 import styles from "./Tables.module.css";
 
-import { TablesInfoContext } from "./page";
+import { TablesInfoContext } from "./contexts";
 
 export default function Tables({ isActive }: { isActive: boolean }) {
     const [ addTableStatus, setAddTableStatus ] = useState(" ");

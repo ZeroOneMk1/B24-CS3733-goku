@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 
@@ -8,30 +8,8 @@ import Tables from "./Tables";
 import DeleteRestaurant from "./DeleteRestaurant";
 import Schedule from "./Schedule";
 
-export type RestaurantInfo = {
-    name: string
-    address: string
-    isActive: boolean
-    openingTime: number
-    closingTime: number
-};
-
-export type TablesInfo = {
-    number: number
-    seats: number
-}[];
-
-// this code is effectively meaningless & is primarily to make the TS compiler happy
-// the purpose is to allow distant children to read & write restaurantInfo and tablesInfo
-export const RestaurantInfoContext = createContext<{
-    restaurantInfo: RestaurantInfo
-    setRestaurantInfo: (r: RestaurantInfo) => void
-}>({restaurantInfo: {} as RestaurantInfo, setRestaurantInfo: () => {}});
-
-export const TablesInfoContext = createContext<{
-    tablesInfo: TablesInfo
-    setTablesInfo: (r: TablesInfo) => void
-}>({tablesInfo: {} as TablesInfo, setTablesInfo: () => {}});
+import type { RestaurantInfo } from "./contexts";
+import { RestaurantInfoContext, TablesInfoContext } from "./contexts";
 
 export default function ManageRestaurant() {
     const [ restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo>({

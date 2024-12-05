@@ -1,7 +1,7 @@
 import { FormEvent, useState, useContext } from "react";
 import styles from './BasicInformation.module.css';
 
-import { RestaurantInfoContext } from "./page";
+import { RestaurantInfoContext } from "./contexts";
 
 export default function BasicInformation() {
     const { restaurantInfo, setRestaurantInfo } = useContext(RestaurantInfoContext);
