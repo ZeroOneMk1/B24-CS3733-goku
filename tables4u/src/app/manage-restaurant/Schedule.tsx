@@ -11,9 +11,17 @@ export default function Schedule() {
             <Times open={restaurantInfo.openingTime} close={restaurantInfo.closingTime}/>
             <div id={styles.gridContainer}>
                 <Tables />
-                <div id={styles.grid}>
-
-                </div>
+                { !restaurantInfo.isActive &&
+                    <div id={styles.inactiveWarning}>
+                        <h1>Restaurant is Inactive</h1>
+                        <p>Because your restaurant is inactive, customers cannot create reservations. Would you like to activate your restaurant?</p>
+                        <p>Know that once you activate your restaurant, you cannot deactivate it.</p>
+                        <button>Activate Restaurant</button>
+                    </div>
+                }
+                { !!restaurantInfo.isActive && // needs !! because "0" is rendered by react
+                    <div id={styles.grid}></div>
+                }
             </div>
         </div>
     )
