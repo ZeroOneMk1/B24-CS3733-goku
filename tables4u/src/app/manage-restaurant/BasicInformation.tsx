@@ -74,11 +74,11 @@ export default function BasicInformation() {
                     <label id={styles.scheduleLabel} htmlFor="restaurant-opening-time">Schedule:</label>
                     <input id="restaurant-opening-time" type="number" value={restaurantInfo.openingTime}
                         min="0" max="24"
-                        onChange={event => modifyRestaurantInfo({openingTime: event.target.value})}/>
+                        onChange={event => modifyRestaurantInfo({openingTime: Number(event.target.value)})}/>
                     <p>to</p>
                     <input id="restaurant-closing-time" type="number" value={restaurantInfo.closingTime}
                         min="0" max="24"
-                        onChange={event => modifyRestaurantInfo({closingTime: event.target.value})}/>
+                        onChange={event => modifyRestaurantInfo({closingTime: Number(event.target.value)})}/>
                 </div>
                 <input type="submit" value="Save Information" />
                 <p id={styles.editStatus} >{editRestaurantStatus}</p>
