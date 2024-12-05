@@ -4,6 +4,7 @@ import BasicInformation from "./BasicInformation";
 import Tables from "./Tables";
 import DeleteRestaurant from "./DeleteRestaurant";
 import { useRouter } from 'next/navigation';
+import SearchDayAvailability from "./SearchDayAvailability"
 import styles from './page.module.css';
 
 const getCookie = (name: string) => document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`))?.at(2);
@@ -93,8 +94,12 @@ export default function Manage() {
                         propogateTablesInfo={setTablesInfo}/>
                     <DeleteRestaurant restaurantInfo={restaurantInfo}/>
                     <button onClick={logout}>Logout</button>
+
+                    <SearchDayAvailability/>
                 </div>
             }
+            
         </div>
+
     );
 }
