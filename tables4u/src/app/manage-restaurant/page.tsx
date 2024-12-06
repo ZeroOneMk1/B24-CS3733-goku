@@ -7,12 +7,13 @@ import BasicInformation from "./BasicInformation";
 import Tables from "./Tables";
 import DeleteRestaurant from "./DeleteRestaurant";
 import Schedule from "./Schedule";
+import SearchDayAvailability from "./SearchDayAvailability"
 
 import type { RestaurantInfo, ReservationInfo } from "./contexts";
 import { RestaurantInfoContext, TablesInfoContext } from "./contexts";
 
 export default function ManageRestaurant() {
-    const [ restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo>({
+    const [restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo>({
         name: "",
         address: "",
         isActive: false,
@@ -20,12 +21,12 @@ export default function ManageRestaurant() {
         closingTime: 0,
     });
 
-    const [ tablesInfo, setTablesInfo] = useState([{
+    const [tablesInfo, setTablesInfo] = useState([{
         number: 0,
         seats: 0
     }]);
 
-    const [ restaurantInfoStatus, setRestaurantInfoStatus ] = useState("waiting");
+    const [restaurantInfoStatus, setRestaurantInfoStatus] = useState("waiting");
 
     async function getRestaurantInfo() {
         const url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/GetRestaurantInfo";
@@ -58,26 +59,32 @@ export default function ManageRestaurant() {
 
     useEffect(() => { getRestaurantInfo(); }, []);
 
-    if (restaurantInfoStatus == "waiting") { return (
-        <div id={styles.restaurantDetailsPlaceholder}>
-            <h1>Waiting...</h1>
-        </div>
-    )} else if (restaurantInfoStatus !== "success") { return (
-        <div id={styles.restaurantDetailsPlaceholder}>
-            <h1>Oops!</h1>
-            <p>{restaurantInfoStatus}</p>
-            <button>Try Again</button>
-        </div>
-    )} else { return (
-        <RestaurantInfoContext.Provider value={{restaurantInfo, setRestaurantInfo}}>
-            <TablesInfoContext.Provider value={{tablesInfo, setTablesInfo}}>
-                <div id={styles.content}>
-                    <RestaurantDetails />
-                    <ReviewAvailability />
-                </div>
-            </TablesInfoContext.Provider>
-        </RestaurantInfoContext.Provider>
-    )}
+    if (restaurantInfoStatus == "waiting") {
+        return (
+            <div id={styles.restaurantDetailsPlaceholder}>
+                <h1>Waiting...</h1>
+            </div>
+        )
+    } else if (restaurantInfoStatus !== "success") {
+        return (
+            <div id={styles.restaurantDetailsPlaceholder}>
+                <h1>Oops!</h1>
+                <p>{restaurantInfoStatus}</p>
+                <button>Try Again</button>
+            </div>
+        )
+    } else {
+        return (
+            <RestaurantInfoContext.Provider value={{ restaurantInfo, setRestaurantInfo }}>
+                <TablesInfoContext.Provider value={{ tablesInfo, setTablesInfo }}>
+                    <div id={styles.content}>
+                        <RestaurantDetails />
+                        <ReviewAvailability />
+                    </div>
+                </TablesInfoContext.Provider>
+            </RestaurantInfoContext.Provider>
+        )
+    }
 }
 
 function RestaurantDetails() {
@@ -94,16 +101,16 @@ function RestaurantDetails() {
             <h1>Restaurant Details</h1>
             <BasicInformation />
             <Tables isActive={restaurantInfo.isActive} />
-            <DeleteRestaurant restaurantInfo={restaurantInfo}/>
+            <DeleteRestaurant restaurantInfo={restaurantInfo} />
             <button onClick={logout}>Logout</button>
         </div>
     )
 }
 
 function ReviewAvailability() {
-    const [ refreshStatus, setRefreshStatus ] = useState("success");
-    const [ reservations, setReservations ] = useState<ReservationInfo[]>([]);
-    const [ utilReport, setUtilReport] = useState<number | null>()
+    const [refreshStatus, setRefreshStatus] = useState("success");
+    const [reservations, setReservations] = useState<ReservationInfo[]>([]);
+    const [utilReport, setUtilReport] = useState<number | null>(null);
     const [date, setDate] = useState('');
 
     const utilText = utilReport != null ? `(${(utilReport * 100).toFixed(2)}% Util.)` : "";
@@ -132,7 +139,7 @@ function ReviewAvailability() {
         if (result.statusCode == 200) {
             setRefreshStatus("success");
             setReservations(result.response.reservations);
-            setUtilReport(result.response.utilReport); 
+            setUtilReport(result.response.utilReport);
         } else setRefreshStatus(result.error);
     }
 
@@ -147,7 +154,7 @@ function ReviewAvailability() {
                     <form onSubmit={refreshReservations}>
                         <label htmlFor="date">Day:</label>
                         <input type="date" name="date" id="date"
-                            required value={date} onChange={(e) => setDate(e.target.value)}/>
+                            required value={date} onChange={(e) => setDate(e.target.value)} />
                         <input type="submit" value={refreshStatus == "waiting" ? "Loading..." : "Refresh"} />
                     </form>
                     <div id={styles.toggleDay}>
@@ -155,10 +162,10 @@ function ReviewAvailability() {
                         <button className="small">Close</button>
                     </div>
                 </div>
-                { refreshStatus !== "waiting" && refreshStatus !== "success" &&
-                        <p>Error: {refreshStatus}</p>}
+                {refreshStatus !== "waiting" && refreshStatus !== "success" &&
+                    <p>Error: {refreshStatus}</p>}
             </div>
-            <Schedule reservations={reservations}/>
+            <Schedule reservations={reservations} />
         </div>
     )
 }

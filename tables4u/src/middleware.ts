@@ -47,6 +47,19 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    // redirect if bad find-reservation queries
+    if (path == '/find-reservation') {
+        // grab search params
+        const searchParams = request.nextUrl.searchParams;
+        const code = searchParams.get("code");
+        const email = searchParams.get("email");
+        const validCode = code && !isNaN(Number(code));
+
+        // determine if request has one query but not the other and clear them if so
+        if (validCode && !email || email && !validCode)
+            return NextResponse.redirect(new URL("/find-reservation", request.url));
+    }
+
     return NextResponse.next();
 }
 
