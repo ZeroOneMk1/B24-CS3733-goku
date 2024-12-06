@@ -1,5 +1,6 @@
 'use client';
 import { useState, FormEvent, useEffect } from "react";
+import Link from 'next/link';
 
 interface FilterRequestBody {
     filters: {
@@ -184,7 +185,9 @@ export default function List() {
                 <ul>
                     {restaurants.map((restaurant, index) => (
                         <li key={index}>
-                            <h3>{restaurant.name}</h3>
+                            <Link href={`/make-reservation?restaurantID=${encodeURIComponent(restaurant.restaurantID)}`}>
+                                <h3>{restaurant.name}</h3>
+                            </Link>
                             <p>{restaurant.address}</p>
                         </li>
                     ))}
