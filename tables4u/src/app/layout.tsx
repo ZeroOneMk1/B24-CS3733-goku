@@ -20,7 +20,7 @@ export default function Layout({
       </head>
       <body>
         <nav id={styles.nav}>
-          <ul><li><a href="/"><strong>tables4u</strong></a></li></ul>
+          <ul><li><a href="/"><strong>Tables4U</strong></a></li></ul>
           <ul>
             <li><a href="/create-restaurant">Create</a></li>
             <li><a href="/reserve">Reserve</a></li>
