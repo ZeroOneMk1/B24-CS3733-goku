@@ -3,15 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-interface FilterRequestBody {
-    filters: {
-        name: string;
-        date: string;
-        time: string;
-        guestCount: string;
-        onlyShowAvailableRestaurants: string;
-    };
-}
+import ReservationInfo from '../(reservations)/ReservationInfo';
 
 interface MakeReservationBody {
     name: string;
@@ -54,8 +46,10 @@ const MakeReservation: React.FC = () => {
     const [availableTimes, setAvailableTimes] = useState<string[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [message, setMessage] = useState<string>("");
+    const [hasReserved, setHasReserved] = useState<boolean>(false);
+    const [reservationCode, setReservationCode] = useState<number>(0);
 
-    async function getAvailableTimes(day: string, guestCount: number) {
+    const getAvailableTimes = async (day: string, guestCount: number) => {
         setLoading(true);
         setMessage("Getting Available Times");
         setTime('');
@@ -63,8 +57,8 @@ const MakeReservation: React.FC = () => {
         console.log('Restaurant Info:', restaurantInfo);
         const fetchRestaurantInfo = async () => {
             try {
-                let openingTime = restaurantInfo.restaurantInfo.openingTime;
-                let closingTime = restaurantInfo.restaurantInfo.closingTime;
+                const openingTime = restaurantInfo.restaurantInfo.openingTime;
+                const closingTime = restaurantInfo.restaurantInfo.closingTime;
                 const times: string[] = [];
                 for (let i = openingTime; i < closingTime; i++) {
                     const response = await fetch(process.env.NEXT_PUBLIC_FUNCTION_URL + "/ListRestaurants", {
@@ -97,7 +91,7 @@ const MakeReservation: React.FC = () => {
             await fetchRestaurantInfo();
             console.log('Available Times:', availableTimes);
         }
-    }
+    };
 
     useEffect(() => {
         const fetchRestaurantInfo = async () => {
@@ -129,11 +123,18 @@ const MakeReservation: React.FC = () => {
     }, [date, guestCount]);
 
     const handleSubmit = async (event: React.FormEvent) => {
+        // get submit button by ID
+        // disable it
+        const submitButton = document.getElementById("SubmitButton");
+        if (submitButton) {
+            submitButton.setAttribute("disabled", "true");
+        }
+
         event.preventDefault();
-        await getAvailableTimes(date, parseInt(guestCount));
+        // await getAvailableTimes(date, parseInt(guestCount));
         // Handle form submission logic here
         console.log(`Name: ${name}, Email: ${email}, Time: ${time}`);
-        let payload: MakeReservationBody = {
+        const payload: MakeReservationBody = {
             name: name,
             email: email,
             restaurant: restaurant.name,
@@ -151,113 +152,123 @@ const MakeReservation: React.FC = () => {
                     },
                     body: JSON.stringify(payload),
                 });
-                const data = await response.json();
+                let data = await response.json();
+                data = JSON.parse(data.body);
                 console.log('Reservation Response:', data);
+                setReservationCode(data.confirmationCode);
             } catch (error) {
                 console.error('Error:', error);
             }
         };
 
         if (restaurantID) {
-            makeReservationSubmit();
+            await makeReservationSubmit();
         }
     };
 
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <div style={{ padding: '20px', maxWidth: '400px', margin: '0 auto', border: '1px solid #ccc', borderRadius: '10px' }}>
-                <h1>Make a Reservation</h1>
-                {/* <p>Restaurant: {restaurantID}</p> */}
-                <p><strong>{restaurant.name}</strong></p>
-                <p>{restaurant.address}</p>
-                <p>4 guests &middot; Monday, November 11th</p>
-                {/* Date Input */}
-                <div className="find-input">
-                    <label htmlFor="date">Day: </label>
-                    <input  
-                        type="date" 
-                        name="date" 
-                        value={date} 
-                        onChange={(e) => setDate(e.target.value)} 
-                    />
-                </div>
-                {/* Guest Count Input */}
-                <div className="find-input">
-                    <label htmlFor="guestCount">Guest Count: </label>
-                    <select
-                        name="guestCount"
-                        value={guestCount}
-                        onChange={(e) => setGuestCount(e.target.value)}>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="6">6</option>
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                    </select>
-                </div>
-                {/* Name Input */}
-                <div className="find-input">
-                    <label htmlFor="name">Name: </label>
-                    <input  
-                        type="text" 
-                        name="name" 
-                        value={name} 
-                        onChange={(e) => setName(e.target.value)} 
-                    />
-                </div>
-                {/* Email Input */}
-                <div className="find-input">
-                    <label htmlFor="email">Email: </label>
-                    <input  
-                        type="email" 
-                        name="email" 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
-                    />
-                </div>
-                <form onSubmit={handleSubmit}>
-                    <div>
-                        <label>
-                            Select a time:
-                            <div>
-                                {loading ? (
-                                    <p>{message}</p>
-                                ) : (
-                                    availableTimes.length > 0 ? (
-                                        availableTimes.map((availableTime) => (
-                                            <button
-                                                type="button"
-                                                key={availableTime}
-                                                onClick={() => setTime(availableTime)}
-                                                style={{
-                                                    backgroundColor: time === availableTime ? 'lightblue' : 'white'
-                                                }}
-                                            >
-                                                {availableTime}
-                                            </button>
-                                        ))
-                                    ) : (
-                                        <p>{message}</p>
-                                    )
-                                )}
-                            </div>
-                        </label>
+    useEffect(() => {
+        if (reservationCode) {
+            setHasReserved(true);
+        }
+    }, [reservationCode]);
+
+    if (!hasReserved) {
+        return (
+            <Suspense fallback={<div>Loading...</div>}>
+                <div style={{ padding: '20px', maxWidth: '400px', margin: '0 auto', border: '1px solid #ccc', borderRadius: '10px' }}>
+                    <h1>Make a Reservation</h1>
+                    {/* <p>Restaurant: {restaurantID}</p> */}
+                    <p><strong>{restaurant.name}</strong></p>
+                    <p>{restaurant.address}</p>
+                    <p>4 guests &middot; Monday, November 11th</p>
+                    {/* Date Input */}
+                    <div className="find-input">
+                        <label htmlFor="date">Day: </label>
+                        <input  
+                            type="date" 
+                            name="date" 
+                            value={date} 
+                            onChange={(e) => setDate(e.target.value)} 
+                        />
                     </div>
-                    {/* Add other form fields here */}
-                    <button type="submit">Reserve!</button>
-                </form>
-            </div>
-        </Suspense>
-    );
+                    {/* Guest Count Input */}
+                    <div className="find-input">
+                        <label htmlFor="guestCount">Guest Count: </label>
+                        <select
+                            name="guestCount"
+                            value={guestCount}
+                            onChange={(e) => setGuestCount(e.target.value)}>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                        </select>
+                    </div>
+                    {/* Name Input */}
+                    <div className="find-input">
+                        <label htmlFor="name">Name: </label>
+                        <input  
+                            type="text" 
+                            name="name" 
+                            value={name} 
+                            onChange={(e) => setName(e.target.value)} 
+                            required
+                        />
+                    </div>
+                    {/* Email Input */}
+                    <div className="find-input">
+                        <label htmlFor="email">Email: </label>
+                        <input  
+                            type="email" 
+                            name="email" 
+                            value={email} 
+                            onChange={(e) => setEmail(e.target.value)} 
+                            required
+                        />
+                    </div>
+                    <form onSubmit={handleSubmit}>
+                        <div>
+                            <label>
+                                Select a time:
+                                <div>
+                                    {loading ? (
+                                        <p>{message}</p>
+                                    ) : (
+                                        availableTimes.length > 0 ? (
+                                            availableTimes.map((availableTime) => (
+                                                <button
+                                                    type="button"
+                                                    key={availableTime}
+                                                    onClick={() => setTime(availableTime)}
+                                                    style={{
+                                                        backgroundColor: time === availableTime ? 'lightblue' : 'white'
+                                                    }}
+                                                >
+                                                    {availableTime}
+                                                </button>
+                                            ))
+                                        ) : (
+                                            <p>{message}</p>
+                                        )
+                                    )}
+                                </div>
+                            </label>
+                        </div>
+                        {/* Add other form fields here */}
+                        <button id="SubmitButton" type="submit" disabled={!name || !email || !time || !date} style={{ backgroundColor: (!name || !email || !time || !date) ? 'grey' : 'orange' }}>Reserve!</button>
+                    </form>
+                </div>
+            </Suspense>
+        );
+    } else {
+        return (
+            <ReservationInfo code={reservationCode} email={email} canDelete={true}/>
+        );
+    }
 };
 
-const MakeReservationWrapper: React.FC = () => (
-    <Suspense fallback={<div>Loading...</div>}>
-        <MakeReservation />
-    </Suspense>
-);
-
-export default MakeReservationWrapper;
+export default MakeReservation;
