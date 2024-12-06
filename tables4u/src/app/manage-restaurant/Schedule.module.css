@@ -1,0 +1,57 @@
+#schedule {
+    background-color: var(--color--foreground);
+    display: flex;
+    height: 100%;
+    border-radius: 0.5em;
+    padding: 0 1em 1em 0;
+}
+
+#times {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 3em;
+    width: 5em;
+}
+
+#gridContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+#tables {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 3em;
+}
+
+#grid {
+    /* background-color: black; */
+    width: 100%;
+    height: 100%;
+    display: grid;
+}
+
+#inactiveWarning {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1em;
+}
+
+#inactiveWarning p {
+    max-width: 36em;
+    text-align: center;
+}
+
+#placeholder {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
