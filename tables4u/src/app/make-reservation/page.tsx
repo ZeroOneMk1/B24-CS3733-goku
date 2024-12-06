@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation'
 
 interface FilterRequestBody {
@@ -130,6 +130,7 @@ const MakeReservation: React.FC = () => {
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
+        await getAvailableTimes(date, parseInt(guestCount));
         // Handle form submission logic here
         console.log(`Name: ${name}, Email: ${email}, Time: ${time}`);
         let payload: MakeReservationBody = {
@@ -156,100 +157,100 @@ const MakeReservation: React.FC = () => {
                 console.error('Error:', error);
             }
         };
-        
 
         if (restaurantID) {
             makeReservationSubmit();
-            await getAvailableTimes(date, parseInt(guestCount));
         }
     };
 
     return (
-        <div style={{ padding: '20px', maxWidth: '400px', margin: '0 auto', border: '1px solid #ccc', borderRadius: '10px' }}>
-            <h1>Make a Reservation</h1>
-            {/* <p>Restaurant: {restaurantID}</p> */}
-            <p><strong>{restaurant.name}</strong></p>
-            <p>{restaurant.address}</p>
-            <p>4 guests &middot; Monday, November 11th</p>
-            {/* Date Input */}
-            <div className="find-input">
-                <label htmlFor="date">Day: </label>
-                <input  
-                    type="date" 
-                    name="date" 
-                    value={date} 
-                    onChange={(e) => setDate(e.target.value)} 
-                />
-            </div>
-            {/* Guest Count Input */}
-            <div className="find-input">
-                <label htmlFor="guestCount">Guest Count: </label>
-                <select
-                    name="guestCount"
-                    value={guestCount}
-                    onChange={(e) => setGuestCount(e.target.value)}>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                    <option value="7">7</option>
-                    <option value="8">8</option>
-                </select>
-            </div>
-            {/* Name Input */}
-            <div className="find-input">
-                <label htmlFor="name">Name: </label>
-                <input  
-                    type="text" 
-                    name="name" 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)} 
-                />
-            </div>
-            {/* Email Input */}
-            <div className="find-input">
-                <label htmlFor="email">Email: </label>
-                <input  
-                    type="email" 
-                    name="email" 
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
-                />
-            </div>
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>
-                        Select a time:
-                        <div>
-                            {loading ? (
-                                <p>{message}</p>
-                            ) : (
-                                availableTimes.length > 0 ? (
-                                    availableTimes.map((availableTime) => (
-                                        <button
-                                            type="button"
-                                            key={availableTime}
-                                            onClick={() => setTime(availableTime)}
-                                            style={{
-                                                backgroundColor: time === availableTime ? 'lightblue' : 'white'
-                                            }}
-                                        >
-                                            {availableTime}
-                                        </button>
-                                    ))
-                                ) : (
-                                    <p>{message}</p>
-                                )
-                            )}
-                        </div>
-                    </label>
+        <Suspense fallback={<div>Loading...</div>}>
+            <div style={{ padding: '20px', maxWidth: '400px', margin: '0 auto', border: '1px solid #ccc', borderRadius: '10px' }}>
+                <h1>Make a Reservation</h1>
+                {/* <p>Restaurant: {restaurantID}</p> */}
+                <p><strong>{restaurant.name}</strong></p>
+                <p>{restaurant.address}</p>
+                <p>4 guests &middot; Monday, November 11th</p>
+                {/* Date Input */}
+                <div className="find-input">
+                    <label htmlFor="date">Day: </label>
+                    <input  
+                        type="date" 
+                        name="date" 
+                        value={date} 
+                        onChange={(e) => setDate(e.target.value)} 
+                    />
                 </div>
-                {/* Add other form fields here */}
-                <button type="submit">Reserve!</button>
-            </form>
-        </div>
+                {/* Guest Count Input */}
+                <div className="find-input">
+                    <label htmlFor="guestCount">Guest Count: </label>
+                    <select
+                        name="guestCount"
+                        value={guestCount}
+                        onChange={(e) => setGuestCount(e.target.value)}>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                    </select>
+                </div>
+                {/* Name Input */}
+                <div className="find-input">
+                    <label htmlFor="name">Name: </label>
+                    <input  
+                        type="text" 
+                        name="name" 
+                        value={name} 
+                        onChange={(e) => setName(e.target.value)} 
+                    />
+                </div>
+                {/* Email Input */}
+                <div className="find-input">
+                    <label htmlFor="email">Email: </label>
+                    <input  
+                        type="email" 
+                        name="email" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)} 
+                    />
+                </div>
+                <form onSubmit={handleSubmit}>
+                    <div>
+                        <label>
+                            Select a time:
+                            <div>
+                                {loading ? (
+                                    <p>{message}</p>
+                                ) : (
+                                    availableTimes.length > 0 ? (
+                                        availableTimes.map((availableTime) => (
+                                            <button
+                                                type="button"
+                                                key={availableTime}
+                                                onClick={() => setTime(availableTime)}
+                                                style={{
+                                                    backgroundColor: time === availableTime ? 'lightblue' : 'white'
+                                                }}
+                                            >
+                                                {availableTime}
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <p>{message}</p>
+                                    )
+                                )}
+                            </div>
+                        </label>
+                    </div>
+                    {/* Add other form fields here */}
+                    <button type="submit">Reserve!</button>
+                </form>
+            </div>
+        </Suspense>
     );
 };
 
