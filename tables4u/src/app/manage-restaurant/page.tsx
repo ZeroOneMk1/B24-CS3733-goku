@@ -112,7 +112,7 @@ function ReviewAvailability() {
     const [reservations, setReservations] = useState<ReservationInfo[]>([]);
     const [utilReport, setUtilReport] = useState<number | null>(null);
     const [date, setDate] = useState('');
-
+    
     const utilText = utilReport != null ? `(${(utilReport * 100).toFixed(2)}% Util.)` : "";
 
     //format date
@@ -143,6 +143,16 @@ function ReviewAvailability() {
         } else setRefreshStatus(result.error);
     }
 
+    function openStatus(type:String): string {
+        if(restaurantInfo.)
+        if(type === "button") {
+        }
+    }
+
+    async function openCloseDay() {
+
+    }
+
     return (
         <div id={styles.reviewAvailability}>
             <div id={styles.availabilityHeader}>
@@ -158,8 +168,8 @@ function ReviewAvailability() {
                         <input type="submit" value={refreshStatus == "waiting" ? "Loading..." : "Refresh"} />
                     </form>
                     <div id={styles.toggleDay}>
-                        <p>Day is <strong>Open</strong></p>
-                        <button className="small">Close</button>
+                        <p>Day is <strong>{openStatus("info")}</strong></p>
+                        <button className="small" onClick={openCloseDay}>{openStatus("button")}</button>
                     </div>
                 </div>
                 {refreshStatus !== "waiting" && refreshStatus !== "success" &&
