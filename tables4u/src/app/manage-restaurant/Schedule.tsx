@@ -1,10 +1,14 @@
 import { useContext } from 'react';
 import styles from './Schedule.module.css';
 
-import { RestaurantInfoContext, TablesInfoContext } from './contexts';
+import { ReservationInfo, RestaurantInfoContext, TablesInfoContext } from './contexts';
+import Reservation from './Reservation';
 
-export default function Schedule() {
+export default function Schedule({ reservations }: { reservations: ReservationInfo[]}) {
     const { restaurantInfo } = useContext(RestaurantInfoContext);
+    const { tablesInfo } = useContext(TablesInfoContext);
+    const numTables = tablesInfo.length;
+    const numReservationSlots = restaurantInfo.closingTime - restaurantInfo.openingTime;
 
     return (
         <div id={styles.schedule}>
@@ -19,8 +23,20 @@ export default function Schedule() {
                         <button>Activate Restaurant</button>
                     </div>
                 }
-                { !!restaurantInfo.isActive && // needs !! because "0" is rendered by react
-                    <div id={styles.grid}></div>
+                { !!restaurantInfo.isActive && reservations.length > 0 && // needs !! because "0" is rendered by react
+                    <div id={styles.grid} style={{
+                        gridTemplateRows: `repeat(${numReservationSlots}, 1fr)`,
+                        gridTemplateColumns: `repeat(${numTables}, 1fr)`
+                    }}>
+                    { reservations.map((reservationInfo) => (
+                        <Reservation reservationInfo={reservationInfo}/>
+                    ))}
+                    </div>
+                }
+                { !!restaurantInfo.isActive && reservations.length == 0 &&
+                    <div id={styles.placeholder}>
+                        <h2>No reservations today!</h2>
+                    </div>
                 }
             </div>
         </div>
