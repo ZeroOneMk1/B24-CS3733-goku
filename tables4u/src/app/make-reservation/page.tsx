@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation';
 
 interface FilterRequestBody {
     filters: {
@@ -39,7 +39,7 @@ interface GetRestaurantInfoResponse {
 }
 
 const MakeReservation: React.FC = () => {
-    const searchParams = useSearchParams()
+    const searchParams = useSearchParams();
     const restaurantID = searchParams.get('restaurantID');
 
     const [name, setName] = useState<string>('');
@@ -254,4 +254,10 @@ const MakeReservation: React.FC = () => {
     );
 };
 
-export default MakeReservation;
+const MakeReservationWrapper: React.FC = () => (
+    <Suspense fallback={<div>Loading...</div>}>
+        <MakeReservation />
+    </Suspense>
+);
+
+export default MakeReservationWrapper;
