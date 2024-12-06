@@ -129,7 +129,6 @@ const MakeReservation: React.FC = () => {
         if (submitButton) {
             submitButton.setAttribute("disabled", "true");
         }
-
         event.preventDefault();
         // await getAvailableTimes(date, parseInt(guestCount));
         // Handle form submission logic here
@@ -271,4 +270,12 @@ const MakeReservation: React.FC = () => {
     }
 };
 
-export default MakeReservation;
+function MakeReservationSuspenseWrapper() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <MakeReservation />
+        </Suspense>
+    );
+}
+
+export default MakeReservationSuspenseWrapper;
