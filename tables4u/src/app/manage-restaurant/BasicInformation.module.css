@@ -1,0 +1,32 @@
+#basicInformation form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+#basicInformation form>* {
+    margin-bottom: 0.75em;
+}
+
+.inputGroup {
+    display: flex;
+    gap: 1em;
+    align-items: center;
+    width: 100%;
+}
+
+.inputGroup input {
+    flex-grow: 1;
+}
+
+#nameLabel {
+    width: 3em;
+}
+
+#addressLabel, #scheduleLabel {
+    width: 5em;
+}
+
+#basicInformationActive {
+    margin-bottom: 1em;
+}

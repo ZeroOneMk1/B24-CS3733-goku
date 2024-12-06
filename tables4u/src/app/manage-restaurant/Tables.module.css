@@ -1,0 +1,34 @@
+#tables {
+    display: flex;
+    flex-direction: column;
+}
+
+#tables>* {
+    margin-bottom: 0.75em;
+}
+
+#tables>button {
+    width: fit-content;
+}
+
+.table form {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.table input[type="submit"] {
+    width: 6em;
+}
+
+.tableNumber {
+    width: 4.5em;
+}
+
+.tableSeats {
+    flex-grow: 1;
+}
+
+#tablesActive {
+    margin-bottom: 1em;
+}

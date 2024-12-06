@@ -1,0 +1,13 @@
+#reservation {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--color--accent-1);
+    border-radius: 0.25em;
+    margin: 0.25em;
+}
+
+#reservation h2 {
+    margin: 0;
+}
