@@ -1,5 +1,5 @@
 'use client';
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 
 interface FilterRequestBody {
     filters: {
@@ -20,8 +20,8 @@ export default function List() {
     const [onlyShowAvailableRestaurants, setOnlyShowAvailableRestaurants] = useState("false");
     const [restaurants, setRestaurants] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
+    const [error, setError] = useState<string | null>(null); 
+    
     //form submit
     const submit = async (e: FormEvent) => {
         e.preventDefault(); //prevent form from reloading page
@@ -76,14 +76,54 @@ export default function List() {
         }
     };
 
+    async function listActiveRestaurants() {
+        setError("Retrieving active restaurants...");
+        const response = await fetch("https://c63up2fh1i.execute-api.us-east-1.amazonaws.com/i1/ListRestaurants", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                filters: {
+                    name: "",
+                    date: "",
+                    time: "",
+                    guestCount: "1",
+                    onlyShowAvailableRestaurants: "false"
+                }
+            }),
+        });
+        if (response.ok) {
+            const data = await response.json();
+            //console.log("API Response:", data);  //log API response
+            setRestaurants(data.restaurants || []);  //update restaurants list or set empty array
+            if(data.restaurants == undefined || data.restaurants.length < 0) {
+                setError("No active restaurants");
+            } else {
+                setError("");
+            }
+        } else {
+            setError("Error fetching data: " + response.statusText);
+        }
+    }
+    
+
+
+    useEffect(() => {
+        let ignore = false;
+        
+        if (!ignore)  listActiveRestaurants()
+        return () => { ignore = true; }
+    },[]);
+
     return (
         <div id="find-restaurant">
             <h1>Find a Restaurant</h1>
             <form onSubmit={submit} method="post">
-                <div>
-                    {/* Restaurant Name Input */}
-                    <div className="find-input">
-                        <label htmlFor="name">Restaurant Name:</label>
+                <div> 
+                    {/* Restaurant Name Input */}  
+                    <div className="find-input">                  
+                        <label htmlFor="name">Restaurant Name: </label>
                         <input 
                             type="text" 
                             name="name" 
@@ -92,12 +132,10 @@ export default function List() {
                             onChange={(e) => setName(e.target.value)} 
                         />
                     </div>
-
                     {/* Date Input */}
                     <div className="find-input">
-                        <label htmlFor="date">Day:</label>
-                        <input 
-                            required 
+                        <label htmlFor="date">Day: </label>
+                        <input  
                             type="date" 
                             name="date" 
                             value={date} 
@@ -107,9 +145,8 @@ export default function List() {
 
                     {/* Time Input */}
                     <div className="find-input">
-                        <label htmlFor="time">Time:</label>
-                        <input 
-                            required 
+                        <label htmlFor="time">Time: </label>
+                        <input  
                             type="time" 
                             name="time" 
                             value={time} 
@@ -119,7 +156,7 @@ export default function List() {
 
                     {/* Guest Count Input */}
                     <div className="find-input">
-                        <label htmlFor="guestCount">Guest Count:</label>
+                        <label htmlFor="guestCount">Guest Count: </label>
                         <select 
                             name="guestCount" 
                             value={guestCount} 

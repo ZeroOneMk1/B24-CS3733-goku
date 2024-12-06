@@ -48,12 +48,14 @@ export const handler = async (event) => {
 
     // check for invalid credentials
     if (credentialsResults.length == 0) {
+      pool.end();
       return {
         statusCode: 401,
         error: "Invalid credentials"
       };
     }
   } catch (error) {
+    pool.end();
     return {
       statusCode: 500,
       error: "Unable to perform database query"
@@ -66,7 +68,7 @@ export const handler = async (event) => {
     restaurantID: credentialsResults[0].restaurantID,
     isAdmin: false
   }, tokenSecret, { expiresIn: '1h' });
-
+  pool.end();
   return {
     statusCode: 200,
     jwt: token

@@ -1,18 +1,11 @@
-import { FormEvent, useState, useEffect } from "react";
+import { FormEvent, useState, useEffect, useContext } from "react";
+import styles from "./Tables.module.css";
 
-export default function Tables({
-    isActive,
-    tablesInfo,
-    propogateTablesInfo
-}: {
-    isActive: boolean,
-    tablesInfo: {
-        number: number,
-        seats: number
-    }[],
-    propogateTablesInfo: (arr: []) => void
-}) {
+import { TablesInfoContext } from "./contexts";
+
+export default function Tables({ isActive }: { isActive: boolean }) {
     const [ addTableStatus, setAddTableStatus ] = useState(" ");
+    const { tablesInfo, setTablesInfo } = useContext(TablesInfoContext);
 
     async function addTable() {
         setAddTableStatus("Adding...");
@@ -27,22 +20,25 @@ export default function Tables({
 
         if (result.statusCode == 200) {
             const tables = JSON.parse(result.body).tables;
-            propogateTablesInfo(tables);
+            setTablesInfo(tables);
             setAddTableStatus("Table added.");
             setTimeout(() => {setAddTableStatus(" ")}, 2000);
         } else setAddTableStatus(result.error);
     }
 
     if (!isActive) {return (
-        <div id="tables">
+        <div id={styles.tables}>
+            <h2>Tables</h2>
             {tablesInfo.map(table => (
-                <Table key={table.number} tableInfo={table} propogateTablesInfo={propogateTablesInfo}/>
+                <Table key={table.number} tableInfo={table} />
             ))}
             <button disabled={addTableStatus == "Adding..."} onClick={addTable}>Add Table</button>
             <p>{addTableStatus}</p>
         </div>
     )} else {return(
-        <div id="tables">
+        <div id={styles.tablesActive}>
+            <h2>Tables</h2>
+            <p>{tablesInfo.length} tables, {tablesInfo.reduce((a, c) => a + c.seats, 0)} seats</p>
             {tablesInfo.map(table => (
                 <p key={table.number}>Table {table.number}: {table.seats} seats</p>
             ))}
@@ -50,16 +46,12 @@ export default function Tables({
     )}
 }
 
-function Table({
-    tableInfo,
-    propogateTablesInfo
-}: {
-    tableInfo: { number: number, seats: number },
-    propogateTablesInfo: (arr: []) => void
-}) {
+function Table({ tableInfo }: { tableInfo: { number: number, seats: number } }) {
     const [ seatsValue, setSeatsValue ] = useState(tableInfo.seats);
     const [ status, setStatus ] = useState("idle");
     const [ errorMessage, setErrorMessage ] = useState(" ");
+
+    const { setTablesInfo } = useContext(TablesInfoContext);
 
     const changed = seatsValue != tableInfo.seats;
     const jwt = document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2);
@@ -96,7 +88,7 @@ function Table({
             setStatus("idle");
             setErrorMessage(" ");
             const tables = JSON.parse(result.body).tables;
-            propogateTablesInfo(tables);
+            setTablesInfo(tables);
         } else {
             setStatus("error");
             setErrorMessage(result.error);
@@ -121,7 +113,7 @@ function Table({
             setStatus("idle");
             setErrorMessage(" ");
             const tables = JSON.parse(result.body).tables;
-            propogateTablesInfo(tables);
+            setTablesInfo(tables);
         } else {
             setStatus("error");
             setErrorMessage(result.error);
@@ -129,13 +121,13 @@ function Table({
     }
 
     return(
-        <div className="table">
+        <div className={styles.table}>
             <form onSubmit={changed? editTable : deleteTable}>
-                <p>Table {tableInfo.number}</p>
+                <p className={styles.tableNumber}>Table {tableInfo.number}:</p>
                 <input type="number" name="seats" id="seats" min="1" max="8" value={seatsValue}
                     onChange={event => setSeatsValue(Number(event.target.value))}/>
-                <label htmlFor="seats">seats</label>
-                <input type="submit" value={buttonText} />
+                <label className={styles.tableSeats} htmlFor="seats">seats</label>
+                <input className="small" type="submit" value={buttonText}/>
                 <p>{errorMessage}</p>
             </form>
         </div>

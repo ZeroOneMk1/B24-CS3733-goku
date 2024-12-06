@@ -1,0 +1,27 @@
+#createRestaurant {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    gap: 1em;
+}
+
+#createRestaurant form {
+    display: flex;
+    flex-direction: column;
+    gap: 2em;
+    align-items: center;
+}
+
+#createRestaurant form>div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+}
+
+.panelInput {
+    display: flex;
+    flex-direction: column;
+    width: 15em;
+}

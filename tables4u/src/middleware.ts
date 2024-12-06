@@ -23,10 +23,18 @@ export async function middleware(request: NextRequest) {
             // attempt to verify token
             const secret = new TextEncoder().encode(process.env.JWT_SECRET);
             const { payload, protectedHeader: _protectedHeader } = await jwtVerify(token, secret);
-            const _decoded = payload as JwtPayload;
+            const decoded = payload as JwtPayload;
 
             // jwt is valid
-            return NextResponse.next();
+            if (path == '/manage-restaurant' && decoded.isAdmin
+                || path == '/admin-dashboard' && !decoded.isAdmin) {
+                
+                // redirect to correct login
+                const redirectURL = (decoded.isAdmin) ? "/owner-login" : "/admin-login";
+                const response = NextResponse.redirect(new URL(redirectURL, request.url));
+                response.cookies.delete("jwt");
+                return response;
+            }
         } catch(error) {
             // jwt is invalid, determine if user was previously an owner or admin
             const decoded = JSON.parse(atob(token.split(".")[1])) as JwtPayload;
@@ -39,8 +47,22 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    // redirect if bad find-reservation queries
+    if (path == '/find-reservation') {
+        // grab search params
+        const searchParams = request.nextUrl.searchParams;
+        const code = searchParams.get("code");
+        const email = searchParams.get("email");
+        const validCode = code && !isNaN(Number(code));
+
+        // determine if request has one query but not the other and clear them if so
+        if (validCode && !email || email && !validCode)
+            return NextResponse.redirect(new URL("/find-reservation", request.url));
+    }
+
     return NextResponse.next();
 }
+
 
 export const config = {
     matcher: [

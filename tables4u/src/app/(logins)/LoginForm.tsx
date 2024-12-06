@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useState, FormEvent } from "react";
+import styles from "./LoginForm.module.css";
 
 export default function LoginForm({
     type
@@ -39,21 +40,21 @@ export default function LoginForm({
     }
 
     return (
-        <div className="login-panel">
+        <div id={styles.loginForm}>
             <h1>{(type == "admin") ? "Administrator Login" : "Owner Login"}</h1>
             <form onSubmit={submit} method="post">
                 <div>
-                    <div className="panel-input">
+                    <div className={styles.panelInput}>
                         <label htmlFor="username">Username:</label>
                         <input required type="text" id="username" name="username" placeholder="Username" />
                     </div>
-                    <div className="panel-input">
+                    <div className={styles.panelInput}>
                         <label htmlFor="password">Password:</label>
                         <input required type="password" id="password" name="password" placeholder="Password" />
                     </div>
                 </div>
                 <div>
-                    <p>{loginStatus}</p>
+                    <p id={styles.loginStatus}>{loginStatus}</p>
                     <input type="submit" value="Log in" />
                     {type == "admin" && <a href="/owner-login">I want to login as a restaurant owner</a> }
                     {type == "owner" && <a href="/admin-login">I want to login as an administrator</a>}
