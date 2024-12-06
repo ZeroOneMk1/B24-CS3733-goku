@@ -112,6 +112,7 @@ function ReviewAvailability() {
     const [reservations, setReservations] = useState<ReservationInfo[]>([]);
     const [utilReport, setUtilReport] = useState<number | null>(null);
     const [date, setDate] = useState('');
+    const [open, setOpen] = useState(true);
 
     const utilText = utilReport != null ? `(${(utilReport * 100).toFixed(2)}% Util.)` : "";
 
@@ -140,7 +141,39 @@ function ReviewAvailability() {
             setRefreshStatus("success");
             setReservations(result.response.reservations);
             setUtilReport(result.response.utilReport);
+            setOpen(result.response.isOpen == 1);
         } else setRefreshStatus(result.error);
+    }
+
+    function openStatus(type:String): string {
+        if(open) {
+            if(type === "button") return "Close";
+            return "Open";
+        } else {
+            if(type === "button") return "Open";
+            return "Closed";
+        }
+    }
+
+    async function openCloseDay() {
+        let url = "";
+        if(open) {
+            url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/CloseFutureDay";
+        } else {
+            url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/ReopenFutureDay";
+        }
+        const body = JSON.stringify({
+            date: formatDate(date),
+            jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2)
+        });
+
+        // send request
+        const response = await fetch(url, { method: "POST", body });
+        const result = await response.json();
+
+        if(result.statusCode == 200) {
+            setOpen(result.isOpen == 1);
+        } else alert(result.error);
     }
 
     return (
@@ -158,8 +191,8 @@ function ReviewAvailability() {
                         <input type="submit" value={refreshStatus == "waiting" ? "Loading..." : "Refresh"} />
                     </form>
                     <div id={styles.toggleDay}>
-                        <p>Day is <strong>Open</strong></p>
-                        <button className="small">Close</button>
+                        <p>Day is <strong>{openStatus("info")}</strong></p>
+                        <button className="small" onClick={openCloseDay}>{openStatus("button")}</button>
                     </div>
                 </div>
                 {refreshStatus !== "waiting" && refreshStatus !== "success" &&
