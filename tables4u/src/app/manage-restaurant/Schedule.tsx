@@ -4,7 +4,11 @@ import styles from './Schedule.module.css';
 import { ReservationInfo, RestaurantInfoContext, TablesInfoContext } from './contexts';
 import Reservation from './Reservation';
 
-export default function Schedule({ reservations }: { reservations: ReservationInfo[]}) {
+export default function Schedule({ reservations, refreshReservations, isAdmin }: {
+    reservations: ReservationInfo[]
+    refreshReservations: (form?: any) => void
+    isAdmin: boolean
+}) {
     const { restaurantInfo, setRestaurantInfo } = useContext(RestaurantInfoContext);
     const { tablesInfo } = useContext(TablesInfoContext);
     const [ activateStatus, setActivateStatus ] = useState("");
@@ -47,7 +51,10 @@ export default function Schedule({ reservations }: { reservations: ReservationIn
                         gridTemplateColumns: `repeat(${numTables}, 1fr)`
                     }}>
                     { reservations.map((reservationInfo) => (
-                        <Reservation reservationInfo={reservationInfo}/>
+                        <Reservation
+                            key={reservationInfo.confirmationCode}
+                            reservationInfo={reservationInfo}
+                            refreshReservations={refreshReservations} isAdmin={isAdmin}/>
                     ))}
                     </div>
                 }

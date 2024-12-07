@@ -6,8 +6,7 @@ import styles from './page.module.css';
 import BasicInformation from "./BasicInformation";
 import Tables from "./Tables";
 import DeleteRestaurant from "./DeleteRestaurant";
-import Schedule from "./Schedule";
-import SearchDayAvailability from "./SearchDayAvailability"
+import ReviewAvailability from "./ReviewAvailability";
 
 import type { RestaurantInfo, ReservationInfo } from "./contexts";
 import { RestaurantInfoContext, TablesInfoContext } from "./contexts";
@@ -103,102 +102,6 @@ function RestaurantDetails() {
             <Tables isActive={restaurantInfo.isActive} />
             <DeleteRestaurant restaurantInfo={restaurantInfo} />
             <button onClick={logout}>Logout</button>
-        </div>
-    )
-}
-
-function ReviewAvailability() {
-    const [refreshStatus, setRefreshStatus] = useState("success");
-    const [reservations, setReservations] = useState<ReservationInfo[]>([]);
-    const [utilReport, setUtilReport] = useState<number | null>(null);
-    const [date, setDate] = useState('');
-    const [open, setOpen] = useState(true);
-
-    const utilText = utilReport != null ? `(${(utilReport * 100).toFixed(2)}% Util.)` : "";
-
-    //format date
-    function formatDate(inputDate: string) {
-        const [year, month, day] = inputDate.split('-');
-        return `${month}-${day}-${year}`;
-    }
-
-    async function refreshReservations(event: React.FormEvent<HTMLFormElement>) {
-        setRefreshStatus("waiting");
-        event.preventDefault();
-
-        // form request body
-        const url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/ReviewDaysAvailability";
-        const body = JSON.stringify({
-            date: formatDate(date),
-            jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2)
-        });
-
-        // send request
-        const response = await fetch(url, { method: "POST", body });
-        const result = await response.json();
-
-        if (result.statusCode == 200) {
-            setRefreshStatus("success");
-            setReservations(result.response.reservations);
-            setUtilReport(result.response.utilReport);
-            setOpen(result.response.isOpen == 1);
-        } else setRefreshStatus(result.error);
-    }
-
-    function openStatus(type:String): string {
-        if(open) {
-            if(type === "button") return "Close";
-            return "Open";
-        } else {
-            if(type === "button") return "Open";
-            return "Closed";
-        }
-    }
-
-    async function openCloseDay() {
-        let url = "";
-        if(open) {
-            url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/CloseFutureDay";
-        } else {
-            url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/ReopenFutureDay";
-        }
-        const body = JSON.stringify({
-            date: formatDate(date),
-            jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2)
-        });
-
-        // send request
-        const response = await fetch(url, { method: "POST", body });
-        const result = await response.json();
-
-        if(result.statusCode == 200) {
-            setOpen(result.isOpen == 1);
-        } else alert(result.error);
-    }
-
-    return (
-        <div id={styles.reviewAvailability}>
-            <div id={styles.availabilityHeader}>
-                <div>
-                    <h1>Review Availability</h1>
-                    <p>Total Reservations: <strong>{reservations.length} {utilText}</strong></p>
-                </div>
-                <div>
-                    <form onSubmit={refreshReservations}>
-                        <label htmlFor="date">Day:</label>
-                        <input type="date" name="date" id="date"
-                            required value={date} onChange={(e) => setDate(e.target.value)} />
-                        <input type="submit" value={refreshStatus == "waiting" ? "Loading..." : "Refresh"} />
-                    </form>
-                    <div id={styles.toggleDay}>
-                        <p>Day is <strong>{openStatus("info")}</strong></p>
-                        <button className="small" onClick={openCloseDay}>{openStatus("button")}</button>
-                    </div>
-                </div>
-                {refreshStatus !== "waiting" && refreshStatus !== "success" &&
-                    <p>Error: {refreshStatus}</p>}
-            </div>
-            <Schedule reservations={reservations} />
         </div>
     )
 }
