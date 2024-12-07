@@ -12,7 +12,7 @@ export const handler = async (event) => {
 
   let FindExistingDay = (date, rID, authentificationToken) => {
     return new Promise((resolve, reject) => {
-      pool.query("SELECT * FROM days WHERE restaurantID =? AND date=?", [rID, date], (error, rows) => {
+      pool.query("SELECT * FROM days WHERE restaurantID=? AND date=?", [rID, date], (error, rows) => {
         if(error) { return reject(error); }
         return resolve(rows);
       })
@@ -30,9 +30,32 @@ export const handler = async (event) => {
 
   let response;
   let futureDay;
+  const { decoded, error: authError } = await verify(event.jwt);
+  if (authError)  {
+    console.log(authError)
+    response = {
+      statusCode: 401,
+      error: 'User is not authenticated'
+    };
+    return response;
+  } else if (decoded.isAdmin) {
+    response = {
+      statusCode: 401,
+      error: "Administrators cannot reopen days"
+    }
+    return response;
+  }
+  console.log(decoded.restaurantID)
+  const paramSectionDate = event.date.split("-");
+  const paramTsDate = new Date(paramSectionDate[2], paramSectionDate[0], paramSectionDate[1]) ;
+  const paramSqlDate = paramSectionDate[2] + "-" + (parseInt(paramSectionDate[0]) + 1) + "-" + (paramSectionDate[1]);
+  console.log(paramSqlDate)
+  const restaurantID = decoded.restaurantID
   try {
-    futureDay = await FindExistingDay(event.day, event.restaurantID, event.authentificationToken)
+    futureDay = await FindExistingDay(paramSqlDate, restaurantID, event.authentificationToken)
+    console.log(futureDay)
   } catch (error) {
+    console.log(error)
     response = {
       statusCode:400,
       error: 'Date is not real'
@@ -41,20 +64,18 @@ export const handler = async (event) => {
     return response
   }
   let today = new Date()
-  const sqlDay = event.day.split("-");
-  const paramDate = new Date(sqlDay[0], sqlDay[1] - 1, sqlDay[2])
-  if(today >= paramDate) { //Checks if the date is in the future
+  if(today >= paramTsDate) { //Checks if the date is in the future
     response = {
       statusCode: 400,
       error: 'Date is in the past'
     }
   } else if(typeof futureDay != undefined && futureDay.length > 0) {   //Checks if the day already exists, creates one if not
     if(futureDay[0].isOpen == false) { //Checks if day is already open
-      await OpenExistingDay(event.day, event.restaurantID, event.authentificationToken)
+      await OpenExistingDay(paramSqlDate, restaurantID, event.authentificationToken)
       response = {
         statusCode: 200,
-        date: event.day,
-        isOpen: true
+        date: paramTsDate,
+        isOpen: 1
       }
     } else {
       response = {
