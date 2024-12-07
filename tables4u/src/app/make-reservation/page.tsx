@@ -123,14 +123,22 @@ const MakeReservation: React.FC = () => {
     }, [date, guestCount]);
 
     const handleSubmit = async (event: React.FormEvent) => {
+        event.preventDefault();
+    
+        // Validate email
+        const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+        if (!emailPattern.test(email)) {
+            alert("Please enter a valid email address");
+            return;
+        }
+    
         // get submit button by ID
         // disable it
         const submitButton = document.getElementById("SubmitButton");
         if (submitButton) {
             submitButton.setAttribute("disabled", "true");
         }
-        event.preventDefault();
-        // await getAvailableTimes(date, parseInt(guestCount));
+    
         // Handle form submission logic here
         console.log(`Name: ${name}, Email: ${email}, Time: ${time}`);
         const payload: MakeReservationBody = {
@@ -159,7 +167,7 @@ const MakeReservation: React.FC = () => {
                 console.error('Error:', error);
             }
         };
-
+    
         if (restaurantID) {
             await makeReservationSubmit();
         }
@@ -183,11 +191,11 @@ const MakeReservation: React.FC = () => {
                     {/* Date Input */}
                     <div className="find-input">
                         <label htmlFor="date">Day: </label>
-                        <input  
-                            type="date" 
-                            name="date" 
-                            value={date} 
-                            onChange={(e) => setDate(e.target.value)} 
+                        <input
+                            type="date"
+                            name="date"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
                         />
                     </div>
                     {/* Guest Count Input */}
@@ -210,23 +218,25 @@ const MakeReservation: React.FC = () => {
                     {/* Name Input */}
                     <div className="find-input">
                         <label htmlFor="name">Name: </label>
-                        <input  
-                            type="text" 
-                            name="name" 
-                            value={name} 
-                            onChange={(e) => setName(e.target.value)} 
+                        <input
+                            type="text"
+                            name="name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
                             required
                         />
                     </div>
                     {/* Email Input */}
                     <div className="find-input">
                         <label htmlFor="email">Email: </label>
-                        <input  
-                            type="email" 
-                            name="email" 
-                            value={email} 
-                            onChange={(e) => setEmail(e.target.value)} 
+                        <input
+                            type="email"
+                            name="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             required
+                            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                            title="Please enter a valid email address"
                         />
                     </div>
                     <form onSubmit={handleSubmit}>
@@ -265,7 +275,7 @@ const MakeReservation: React.FC = () => {
         );
     } else {
         return (
-            <ReservationInfo code={reservationCode} email={email} canDelete={true}/>
+            <ReservationInfo code={reservationCode} email={email} canDelete={true} />
         );
     }
 };
