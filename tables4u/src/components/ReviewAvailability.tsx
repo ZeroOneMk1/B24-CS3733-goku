@@ -78,7 +78,7 @@ export default function ReviewAvailability({restaurantID}: {restaurantID?: strin
     }
 
     function showButton() {
-        if(restaurantID == undefined) {
+        if(restaurantID !== "") {
             return styles.availabilityHidden;
         }
             return;
