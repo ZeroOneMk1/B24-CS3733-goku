@@ -3,10 +3,13 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Restaurants from './Restaurants';
 
+import { Dashboard } from "@/components/Dashboard";
+
 export default function AdminDashboard() {
     const router = useRouter();
-    const [restaurantList, setRestaurantList] = useState([]);
+    const [restaurantList, setRestaurantList] = useState<any[]>([]);
     const [listError, setListError] = useState("Loading restaurants...");
+    const [ selectedRestaurant, setSelectedRestaurant ] = useState<string | undefined>(undefined);
 
     const getCookie = (name: string) => document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`))?.at(2);
 
@@ -48,9 +51,18 @@ export default function AdminDashboard() {
     return (
         <div id="admin-dashboard-panel">
             <h1>Administrator Dashboard</h1>
-            <p id="admin-restaurant-list-error">{listError}</p>
+            <select name="restaurants" id="restaurants" defaultValue="" onChange={(event) => {
+                setSelectedRestaurant(event.target.value);
+            }}>
+                <option value="" disabled>Select Restaurant</option>
+                {restaurantList.map((restaurantInfo) => (
+                    <option key={restaurantInfo.restaurantID} value={restaurantInfo.restaurantID}>{restaurantInfo.name}</option>
+                ))}
+            </select>
+            <Dashboard restaurantID={selectedRestaurant}/>
+            {/* <p id="admin-restaurant-list-error">{listError}</p>
             <Restaurants restaurantsInfo={restaurantList}/>
-            <button onClick={logout}>Logout</button>
+            <button onClick={logout}>Logout</button> */}
         </div>
     );
 }

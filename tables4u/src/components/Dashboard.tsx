@@ -51,7 +51,7 @@ export function Dashboard({ restaurantID } : { restaurantID?: string }) {
         } else setRestaurantInfoStatus(result.error);
     }
 
-    useEffect(() => { getRestaurantInfo(); }, []);
+    useEffect(() => { getRestaurantInfo(); }, [restaurantID]);
 
     if (restaurantInfoStatus == "waiting") {
         return (
@@ -74,8 +74,8 @@ export function Dashboard({ restaurantID } : { restaurantID?: string }) {
                     <div id={styles.content}>
                         <div id={styles.restaurantDetails}>
                             <h1>Restaurant Details</h1>
-                            <BasicInformation />
-                            <Tables isActive={restaurantInfo.isActive} />
+                            <BasicInformation isAdmin={!!restaurantID} />
+                            <Tables isActive={restaurantInfo.isActive || !!restaurantID} />
                             <AccountOptions restaurantInfo={restaurantInfo} />
                         </div>
                         <ReviewAvailability />
