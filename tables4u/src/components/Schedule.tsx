@@ -36,7 +36,13 @@ export default function Schedule({ reservations, refreshReservations, isAdmin }:
             <Times open={restaurantInfo.openingTime} close={restaurantInfo.closingTime}/>
             <div id={styles.gridContainer}>
                 <Tables />
-                { !restaurantInfo.isActive &&
+                {
+                    !restaurantInfo.isActive && isAdmin && 
+                    <div id={styles.inactiveWarning}>
+                        <h1>Restaurant is Inactive</h1>
+                    </div>
+                }
+                { !restaurantInfo.isActive && !isAdmin &&
                     <div id={styles.inactiveWarning}>
                         <h1>Restaurant is Inactive</h1>
                         <p>Because your restaurant is inactive, customers cannot create reservations. Would you like to activate your restaurant?</p>

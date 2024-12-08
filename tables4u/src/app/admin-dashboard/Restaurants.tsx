@@ -1,5 +1,5 @@
 import { FormEvent, useState, useEffect } from "react";
-import DeleteRestaurant from '../manage-restaurant/DeleteRestaurant';
+// import DeleteRestaurant from '../manage-restaurant/DeleteRestaurant';
 
 export default function Restaurants({
   restaurantsInfo

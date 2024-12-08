@@ -29,3 +29,7 @@
 #availabilityHeader input[type="date"] {
     width: 9em;
 }
+
+#availabilityHidden {
+    display:none;
+}

@@ -3,11 +3,7 @@ import styles from './BasicInformation.module.css';
 
 import { RestaurantInfoContext } from "./contexts";
 
-type Props = {
-    isAdmin: boolean;
-};
-
-export default function BasicInformation(props:Props) {
+export default function BasicInformation({ isAdmin }: { isAdmin: boolean }) {
     const { restaurantInfo, setRestaurantInfo } = useContext(RestaurantInfoContext);
 
     const [ editRestaurantStatus, setEditRestaurantStatus ] = useState(" ");
@@ -52,7 +48,7 @@ export default function BasicInformation(props:Props) {
         } else setActivateRestaurantStatus(result.error);
     }
 
-    if (!restaurantInfo.isActive && !props.isAdmin) {return (
+    if (!restaurantInfo.isActive && !isAdmin) {return (
         <div id={styles.basicInformation}>
             <h2>Basic Information</h2>
             <form onSubmit={editRestaurant}>
@@ -94,6 +90,7 @@ export default function BasicInformation(props:Props) {
             <p>{restaurantInfo.name}</p>
             <p>{restaurantInfo.address}</p>
             <p>Open <strong>{restaurantInfo.openingTime}</strong> to <strong>{restaurantInfo.closingTime}</strong></p>
+            <p>Restaurant is: <strong>{activeLabel}</strong></p>
         </div>
     )}
 }
