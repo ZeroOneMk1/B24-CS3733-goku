@@ -5,6 +5,7 @@ import BasicInformation from "./BasicInformation";
 import Tables from "./Tables";
 import AccountOptions from "./AccountOptions";
 import ReviewAvailability from "./ReviewAvailability";
+import AvailabilityReport from "./AvailabilityReport";
 
 import type { RestaurantInfo } from "./contexts";
 import { RestaurantInfoContext, TablesInfoContext } from "./contexts";
@@ -23,6 +24,8 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
     const [restaurantID, setRestaurantID] = useState("");
 
     const [restaurantInfoStatus, setRestaurantInfoStatus] = useState("waiting");
+
+    const [isAvailabilityReport, setIsAvailabilityReport] = useState<boolean>(false);
 
     async function getRestaurantInfo() {
         const url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/GetRestaurantInfo";
@@ -68,6 +71,11 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
             }
         }
     }
+    
+    function avialabilityButtonDisplay() {
+        if(isAvailabilityReport) return "Generate Availabity Report";
+        return "Show Reservations"
+    }
 
     function AdminSelect() {
         return (
@@ -85,8 +93,14 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
                         <option key={restaurantInfo.restaurantID} value={restaurantInfo.restaurantID}>{restaurantInfo.name}</option>
                     ))}
                 </select>
+                <button id={styles.swapAvailabilityButton} onClick={() => setIsAvailabilityReport(!isAvailabilityReport)}>{avialabilityButtonDisplay()}</button>
             </div>
         )
+    }
+
+    function AvailabilityModules() {
+        if(isAvailabilityReport) return  <AvailabilityReport restaurantID={restaurantID}/>;
+        return <ReviewAvailability restaurantID={restaurantID}/>;
     }
 
     if(restaurantList == undefined) {
@@ -128,7 +142,7 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
                             <Tables isActive={restaurantInfo.isActive || typeof restaurantList != undefined} />
                             <AccountOptions restaurantInfo={restaurantInfo} restaurantID={restaurantID} />
                         </div>
-                        <ReviewAvailability restaurantID={restaurantID}/>
+                        <AvailabilityModules/>
                     </div>
                 </TablesInfoContext.Provider>
             </RestaurantInfoContext.Provider>
