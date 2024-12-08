@@ -98,7 +98,9 @@ function RestaurantDetails() {
     return (
         <div id={styles.restaurantDetails}>
             <h1>Restaurant Details</h1>
-            <BasicInformation />
+            <BasicInformation
+                isAdmin={ false }
+            />
             <Tables isActive={restaurantInfo.isActive} />
             <DeleteRestaurant restaurantInfo={restaurantInfo} />
             <button onClick={logout}>Logout</button>
