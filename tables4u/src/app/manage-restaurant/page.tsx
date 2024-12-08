@@ -5,7 +5,7 @@ import styles from './page.module.css';
 
 import BasicInformation from "./BasicInformation";
 import Tables from "./Tables";
-import DeleteRestaurant from "./DeleteRestaurant";
+import AccountOptions from "./AccountOptions";
 import ReviewAvailability from "./ReviewAvailability";
 
 import type { RestaurantInfo, ReservationInfo } from "./contexts";
@@ -77,31 +77,16 @@ export default function ManageRestaurant() {
             <RestaurantInfoContext.Provider value={{ restaurantInfo, setRestaurantInfo }}>
                 <TablesInfoContext.Provider value={{ tablesInfo, setTablesInfo }}>
                     <div id={styles.content}>
-                        <RestaurantDetails />
+                        <div id={styles.restaurantDetails}>
+                            <h1>Restaurant Details</h1>
+                            <BasicInformation />
+                            <Tables isActive={restaurantInfo.isActive} />
+                            <AccountOptions restaurantInfo={restaurantInfo} />
+                        </div>
                         <ReviewAvailability />
                     </div>
                 </TablesInfoContext.Provider>
             </RestaurantInfoContext.Provider>
         )
     }
-}
-
-function RestaurantDetails() {
-    const router = useRouter();
-    const { restaurantInfo } = useContext(RestaurantInfoContext);
-
-    function logout() {
-        document.cookie = "jwt=;";
-        router.push("/");
-    }
-
-    return (
-        <div id={styles.restaurantDetails}>
-            <h1>Restaurant Details</h1>
-            <BasicInformation />
-            <Tables isActive={restaurantInfo.isActive} />
-            <DeleteRestaurant restaurantInfo={restaurantInfo} />
-            <button onClick={logout}>Logout</button>
-        </div>
-    )
 }
