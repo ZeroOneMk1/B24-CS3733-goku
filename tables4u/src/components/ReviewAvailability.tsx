@@ -30,7 +30,7 @@ export default function ReviewAvailability({restaurantID}: {restaurantID?: strin
         // form request body
         const url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/ReviewDaysAvailability";
         let body;
-        if(restaurantID == undefined) {
+        if(restaurantID == undefined || restaurantID == "") {
             body = JSON.stringify({
                 date: formatDate(date),
                 jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2)
@@ -108,7 +108,7 @@ export default function ReviewAvailability({restaurantID}: {restaurantID?: strin
                 {refreshStatus !== "waiting" && refreshStatus !== "success" &&
                     <p>Error: {refreshStatus}</p>}
             </div>
-            <Schedule reservations={reservations} refreshReservations={refreshReservations} isAdmin={true} />
+            <Schedule reservations={reservations} refreshReservations={refreshReservations} isAdmin={!(restaurantID == "")} />
         </div>
     )
 }
