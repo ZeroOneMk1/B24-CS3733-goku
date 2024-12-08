@@ -96,7 +96,7 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
                         <option key={restaurantInfo.restaurantID} value={restaurantInfo.restaurantID}>{restaurantInfo.name}</option>
                     ))}
                 </select>
-                <button id={styles.swapAvailabilityButton} onClick={() => setIsAvailabilityReport(!isAvailabilityReport)}>{isAvailabilityReport == true ? "Generate Availabity Report": "Show Reservations"}</button>
+                <button id={styles.swapAvailabilityButton} onClick={() => setIsAvailabilityReport(!isAvailabilityReport)}>{isAvailabilityReport == false ? "Generate Availabity Report": "Show Reservations"}</button>
             </div>
         )    
     
