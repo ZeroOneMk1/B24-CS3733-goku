@@ -14,6 +14,7 @@ export default function ReviewAvailability({restaurantID}: {restaurantID?: strin
     });
     const [open, setOpen] = useState(true);
     const [ toggling, setToggling ] = useState(false);
+    const [prevRestaurantID, setPrevRestaurantID] = useState(restaurantID);
 
     const utilText = utilReport != null ? `(${(utilReport * 100).toFixed(2)}% Util.)` : "";
 
@@ -85,6 +86,12 @@ export default function ReviewAvailability({restaurantID}: {restaurantID?: strin
     }
 
     useEffect(() => {refreshReservations()}, [])
+
+    if(restaurantID !== prevRestaurantID) {
+        setPrevRestaurantID(restaurantID);
+        setReservations([]);
+        refreshReservations();
+    }
 
     return (
         <div id={styles.reviewAvailability}>
