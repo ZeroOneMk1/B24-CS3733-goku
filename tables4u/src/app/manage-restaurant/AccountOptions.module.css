@@ -1,0 +1,10 @@
+#accountOptions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    align-items: flex-start;
+}
+
+#accountOptions h2 {
+    margin: 0;
+}
