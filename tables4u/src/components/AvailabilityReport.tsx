@@ -33,7 +33,9 @@ export default function AvailabilityReport({restaurantID}: {restaurantID?: strin
     return (
          <div id={styles.reviewAvailaibity}>
             <div id={styles.availabilityHeader}>
-                <h1>Generate Availability Report</h1>
+                <div>
+                    <h1>Generate Availability Report</h1>
+                </div>
             </div>
             <div id={styles.dateForm}>
                 <form onSubmit={generateAvailabityReport}>
