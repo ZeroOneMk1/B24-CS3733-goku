@@ -14,6 +14,7 @@ export default function ReviewAvailability({restaurantID}: {restaurantID?: strin
     });
     const [open, setOpen] = useState(true);
     const [ toggling, setToggling ] = useState(false);
+    const [prevRestaurantID, setPrevRestaurantID] = useState(restaurantID);
 
     const utilText = utilReport != null ? `(${(utilReport * 100).toFixed(2)}% Util.)` : "";
 
@@ -30,7 +31,7 @@ export default function ReviewAvailability({restaurantID}: {restaurantID?: strin
         // form request body
         const url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/ReviewDaysAvailability";
         let body;
-        if(restaurantID == undefined) {
+        if(restaurantID == undefined || restaurantID == "") {
             body = JSON.stringify({
                 date: formatDate(date),
                 jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2)
@@ -78,13 +79,19 @@ export default function ReviewAvailability({restaurantID}: {restaurantID?: strin
     }
 
     function showButton() {
-        if(restaurantID == undefined) {
+        if(restaurantID !== "") {
             return styles.availabilityHidden;
         }
             return;
     }
 
     useEffect(() => {refreshReservations()}, [])
+
+    if(restaurantID !== prevRestaurantID) {
+        setPrevRestaurantID(restaurantID);
+        setReservations([]);
+        refreshReservations();
+    }
 
     return (
         <div id={styles.reviewAvailability}>
@@ -108,7 +115,7 @@ export default function ReviewAvailability({restaurantID}: {restaurantID?: strin
                 {refreshStatus !== "waiting" && refreshStatus !== "success" &&
                     <p>Error: {refreshStatus}</p>}
             </div>
-            <Schedule reservations={reservations} refreshReservations={refreshReservations} isAdmin={true} />
+            <Schedule reservations={reservations} refreshReservations={refreshReservations} isAdmin={!(restaurantID == "")} />
         </div>
     )
 }

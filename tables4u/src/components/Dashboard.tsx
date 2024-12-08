@@ -24,11 +24,19 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
 
     const [restaurantInfoStatus, setRestaurantInfoStatus] = useState("waiting");
 
-    async function getRestaurantInfo() {
+    async function getRestaurantInfo(restaurantID: string) {
         const url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/GetRestaurantInfo";
-        const body = JSON.stringify({
-            restaurantID, jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2)
-        })
+        let body;
+        if(restaurantID == "") {
+            body = JSON.stringify({
+                restaurantID, jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2)
+            })
+         } else {
+            body= JSON.stringify({
+                restaurantID: restaurantID,
+                jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2)
+            })
+        }
 
         const response = await fetch(url, { method: "POST", body });
         const result = await response.json();
@@ -76,7 +84,7 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
                 <select name="restaurants" id="restaurants" defaultValue={restaurantID} onChange={(event) => {
                     if(restaurantID !== event.target.value) {
                         setRestaurantID(event.target.value);
-                        setRestaurantInfo(infoFromID(event.target.value));
+                        getRestaurantInfo(event.target.value);
                         setRestaurantInfoStatus("adminSuccess");
                     }
                 }}>
@@ -90,7 +98,7 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
     }
 
     if(restaurantList == undefined) {
-        useEffect(() => { getRestaurantInfo(); }, [restaurantID]);
+        useEffect(() => { getRestaurantInfo(restaurantID); }, [restaurantID]);
     } else if (restaurantID == ""){
         useEffect(() => setRestaurantInfoStatus("admin"));
     } else {
@@ -125,7 +133,7 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
                             <AdminSelect/>
                             <h1>Restaurant Details</h1>
                             <BasicInformation isAdmin={restaurantList !== undefined} />
-                            <Tables isActive={restaurantInfo.isActive || typeof restaurantList != undefined} />
+                            <Tables isActive={restaurantInfo.isActive || !(restaurantList == undefined)} />
                             <AccountOptions restaurantInfo={restaurantInfo} restaurantID={restaurantID} />
                         </div>
                         <ReviewAvailability restaurantID={restaurantID}/>
