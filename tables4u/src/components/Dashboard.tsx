@@ -9,29 +9,45 @@ import ReviewAvailability from "./ReviewAvailability";
 import type { RestaurantInfo } from "./contexts";
 import { RestaurantInfoContext, TablesInfoContext } from "./contexts";
 
-export function Dashboard({ restaurantID } : { restaurantID?: string }) {
-    const [restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo>({
-        name: "",
-        address: "",
-        isActive: false,
-        openingTime: 0,
-        closingTime: 0,
-    });
+export function Dashboard({ isAdmin } : { isAdmin: boolean }) {
+    const [restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo | null>(null);
+
+    const [ selectedRestaurant, setSelectedRestaurant ] = useState<string | undefined>(undefined);
+    const [ restaurantList , setRestaurantList ] = useState<any[]>([]);
 
     const [tablesInfo, setTablesInfo] = useState([{ number: 0, seats: 0 }]);
+    const [restaurantInfoStatus, setRestaurantInfoStatus] = useState("Waiting...");
 
-    const [restaurantInfoStatus, setRestaurantInfoStatus] = useState("waiting");
+    async function listAllRestaurants() {
+        const url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/ListAllRestaurants";
+        const body = JSON.stringify({
+            jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2)
+        });
+        const response = await fetch(url, { method: "POST", body });
+        const result = await response.json();
+        if(result.statusCode == 200) {
+            const list = [];
+            for (const restaurant of result.restaurants) {
+                list.push(restaurant);
+            }
+            setRestaurantList(list);
+            setSelectedRestaurant(list[0].restaurantID);
+        } else setRestaurantList([]);
+    }
 
     async function getRestaurantInfo() {
+        setRestaurantInfoStatus("Waiting...");
+        if (!selectedRestaurant) return;
+
         const url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/GetRestaurantInfo";
         const body = JSON.stringify({
-            restaurantID, jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2)
-        })
+            restaurantID: selectedRestaurant, jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2)
+        });
 
         const response = await fetch(url, { method: "POST", body });
         const result = await response.json();
         if (result.statusCode == 200) {
-            setRestaurantInfoStatus("success");
+            setRestaurantInfoStatus("");
             const info = JSON.parse(result.body).restaurantInfo;
 
             setRestaurantInfo({
@@ -51,15 +67,16 @@ export function Dashboard({ restaurantID } : { restaurantID?: string }) {
         } else setRestaurantInfoStatus(result.error);
     }
 
-    useEffect(() => { getRestaurantInfo(); }, [restaurantID]);
+    useEffect(() => { listAllRestaurants(); }, []);
+    useEffect(() => { getRestaurantInfo(); }, [selectedRestaurant]);
 
-    if (restaurantInfoStatus == "waiting") {
+    if (!restaurantInfo) {
         return (
             <div id={styles.restaurantDetailsPlaceholder}>
                 <h1>Waiting...</h1>
             </div>
         )
-    } else if (restaurantInfoStatus !== "success") {
+    } else if (restaurantInfoStatus !== "" && restaurantInfoStatus !== "Waiting...") {
         return (
             <div id={styles.restaurantDetailsPlaceholder}>
                 <h1>Oops!</h1>
@@ -74,8 +91,17 @@ export function Dashboard({ restaurantID } : { restaurantID?: string }) {
                     <div id={styles.content}>
                         <div id={styles.restaurantDetails}>
                             <h1>Restaurant Details</h1>
-                            <BasicInformation isAdmin={!!restaurantID} />
-                            <Tables isActive={restaurantInfo.isActive || !!restaurantID} />
+                            <select name="restaurants" id="restaurants" value={selectedRestaurant} defaultValue="" onChange={(event) => {
+                                setSelectedRestaurant(event.target.value);
+                            }}>
+                                <option value="" disabled>Select Restaurant</option>
+                                {restaurantList.map((restaurantInfo) => (
+                                    <option key={restaurantInfo.restaurantID} value={restaurantInfo.restaurantID}>{restaurantInfo.name}</option>
+                                ))}
+                            </select>
+                            <p>{restaurantInfoStatus}</p>
+                            <BasicInformation isAdmin={isAdmin} />
+                            <Tables isActive={restaurantInfo.isActive || isAdmin} />
                             <AccountOptions restaurantInfo={restaurantInfo} />
                         </div>
                         <ReviewAvailability />
