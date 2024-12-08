@@ -22,17 +22,21 @@ export default function AccountOptions({ restaurantInfo, restaurantID }: {
         const url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/DeleteRestaurant";
         const body = JSON.stringify({
             restaurantID: restaurantID ?? null,
-            jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2)
+            jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2),
         });
 
         const response = await fetch(url, { method: "POST", body });
         const result = await response.json();
 
         if (result.statusCode == 200) {
-            // set status, delete cookie, and return to index
-            setDeleteRestaurantStatus("Deleted, redirecting...");
-            document.cookie = "jwt=;";
-            setTimeout(() => router.push("/"), 2000);
+            if(restaurantID == "") {
+                // set status, delete cookie, and return to index
+                setDeleteRestaurantStatus("Deleted, redirecting...");
+                document.cookie = "jwt=;";
+                setTimeout(() => router.push("/"), 2000);
+            } else {
+                window.location.reload();
+            }
         } else setDeleteRestaurantStatus(result.error);
     }
 

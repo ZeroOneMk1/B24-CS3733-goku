@@ -126,7 +126,7 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
                             <h1>Restaurant Details</h1>
                             <BasicInformation isAdmin={restaurantList !== undefined} />
                             <Tables isActive={restaurantInfo.isActive || typeof restaurantList != undefined} />
-                            <AccountOptions restaurantInfo={restaurantInfo} />
+                            <AccountOptions restaurantInfo={restaurantInfo} restaurantID={restaurantID} />
                         </div>
                         <ReviewAvailability restaurantID={restaurantID}/>
                     </div>
