@@ -35,9 +35,9 @@ export const handler = async (event) => {
         [restaurantID, date]
       );
       if (rows.length === 0) {
-        return null;  // No dayID found
+        return null;  
       }
-      return rows[0].dayID;  // Return the existing dayID
+      return rows[0].dayID;  
     };
 
     const isRestaurantOpen = async (restaurantID, date) => {
@@ -51,18 +51,18 @@ export const handler = async (event) => {
       return rows[0].isOpen === 1;  
     };
 
-    const checkTableAvailability = async (restaurantID, dayID, customerCount, time) => {
-      const [rows] = await pool.query(
-        "SELECT tableID, number, seats FROM tables WHERE restaurantID = ? AND seats >= ? AND number NOT IN (SELECT tableID FROM reservations WHERE restaurantID = ? AND dayID = ? AND time = ?)",
+    const checkTableAvailability = async (restaurantID, dayID, customerCount, time, connection) => {
+      const [rows] = await connection.query(
+        "SELECT tableID, number, seats FROM tables WHERE restaurantID = ? AND seats >= ? AND tableID NOT IN (SELECT tableID FROM reservations WHERE restaurantID = ? AND dayID = ? AND time = ?)",
         [restaurantID, customerCount, restaurantID, dayID, time]
       );
-
+    
       if (rows.length === 0) {
         return null; 
       }
     
       const availableTable = rows.sort((a, b) => (a.seats - customerCount) - (b.seats - customerCount))[0];
-    
+
       if (availableTable) {
         console.log(`Available table found: Table number: ${availableTable.number}, tableID: ${availableTable.tableID}`);
         return availableTable.tableID;
@@ -70,6 +70,8 @@ export const handler = async (event) => {
     
       return null;
     };
+    
+
 
     const createNewDayIfNeeded = async (restaurantID, date) => {
       const [rows] = await pool.query(
@@ -91,12 +93,18 @@ export const handler = async (event) => {
     };
 
     const formatDate = (date) => {
-      const [month, day, year] = date.split('/');
-      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      try{
+        const [month, day, year] = date.split('/');
+        console.log(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      } catch {
+        console.log(date);
+        return date;
+      }
     };
 
     const timeToHour = (timeStr) => {
-      return parseInt(timeStr, 10);  // Simply parse the string as an integer
+      return parseInt(timeStr, 10);  
     };
 
     const getOpenTime = async (restaurantID) => {
@@ -107,7 +115,7 @@ export const handler = async (event) => {
       if (rows.length === 0) {
         return null;  
       }
-      return timeToHour(rows[0].openingTime);  // Convert opening time to an integer hour
+      return timeToHour(rows[0].openingTime);  
     };
     
     const getCloseTime = async (restaurantID) => {
@@ -118,7 +126,7 @@ export const handler = async (event) => {
       if (rows.length === 0) {
         return null;  
       }
-      return timeToHour(rows[0].closingTime);  // Convert closing time to an integer hour
+      return timeToHour(rows[0].closingTime); 
     };
 
     //check that time must be less then closetime
@@ -130,59 +138,63 @@ export const handler = async (event) => {
     };
 
     const makeReservation = async (name, email, restaurantName, date, customerCount, time) => {
-      if (!restaurantName) {
-        throw new Error("Restaurant name is required.");
+      const connection = await pool.getConnection();
+      await connection.beginTransaction();  
+
+      try {
+        const restaurantID = await getRestaurantID(restaurantName, connection);
+        const formattedDate = formatDate(date);
+        const openingTime = await getOpenTime(restaurantID, connection);
+        const closingTime = await getCloseTime(restaurantID, connection);
+
+        const timeIsValid = validTime(openingTime, closingTime, time);
+        if (!timeIsValid) {
+          throw new Error("Invalid reservation time");
+        }
+
+        const open = await isRestaurantOpen(restaurantID, formattedDate, connection);
+        if (!open) {
+          throw new Error("The restaurant is closed on the requested day.");
+        }
+
+        const { reservationID, confirmationCode } = generateReservationDetails();
+        let dayID = await getDayID(restaurantID, formattedDate, connection);
+        if (!dayID) {
+          dayID = await createNewDayIfNeeded(restaurantID, formattedDate, connection);
+        }
+
+        const availableTable = await checkTableAvailability(restaurantID, dayID, customerCount, time, connection);
+        if (!availableTable) {
+          throw new Error("No available table for the specified customer count.");
+        }
+
+        const customerCountNumber = Number(customerCount);
+        if (isNaN(customerCountNumber)) {
+          throw new Error("Customer count must be a valid number.");
+        }
+
+        await connection.query(
+          "INSERT INTO reservations (reservationID, customerCount, dayID, tableID, email, confirmationCode, time) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          [reservationID, customerCountNumber, dayID, availableTable, email, confirmationCode, time]
+        );
+
+        await connection.commit();  
+
+        return {
+          reservationID,
+          confirmationCode,
+          tableID: availableTable,
+          customerCount: customerCountNumber,
+          date: formattedDate,
+          email,
+          dayID
+        };
+      } catch (error) {
+        await connection.rollback();  
+        throw error;  
+      } finally {
+        connection.release();  
       }
-
-      
-      const restaurantID = await getRestaurantID(restaurantName);
-      const formattedDate = formatDate(date);
-      const openingTime = await getOpenTime(restaurantID);
-      const numbertime = parseInt(openingTime);
-      
-      const closingTime = await getCloseTime(restaurantID);
-
-      const timeIsValid = validTime(openingTime, closingTime, time);
-      if(!timeIsValid){
-        throw new Error("invalid reservation time");
-      }
-
-      const open = await isRestaurantOpen(restaurantID, formattedDate);
-      if (!open) {
-        throw new Error("The restaurant is closed on the requested day.");
-      }
-
-      const { reservationID, confirmationCode } = generateReservationDetails();
-      
-      let dayID = await getDayID(restaurantID, formattedDate);
-      if (!dayID) {
-        dayID = await createNewDayIfNeeded(restaurantID, formattedDate);  // Create a new dayID if it doesn't exist
-      }
-
-      const availableTable = await checkTableAvailability(restaurantID, dayID, customerCount, time);
-      if (!availableTable) {
-        throw new Error("No available table for the specified customer count.");
-      }
-
-      const customerCountNumber = Number(customerCount);
-      if (isNaN(customerCountNumber)) {
-        throw new Error("Customer count must be a valid number.");
-      }
-
-      const [result] = await pool.query(
-        "INSERT INTO reservations (reservationID, customerCount, dayID, tableID, email, confirmationCode, time) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [reservationID, customerCountNumber, dayID, availableTable, email, confirmationCode, time]
-      );
-
-      return {
-        reservationID,
-        confirmationCode,
-        tableID: availableTable,
-        customerCount: customerCountNumber,
-        date: formattedDate,
-        email,
-        dayID
-      };
     };
 
     const reservationDetails = await makeReservation(
