@@ -90,6 +90,7 @@ export default function BasicInformation({ isAdmin }: { isAdmin: boolean }) {
             <p>{restaurantInfo.name}</p>
             <p>{restaurantInfo.address}</p>
             <p>Open <strong>{restaurantInfo.openingTime}</strong> to <strong>{restaurantInfo.closingTime}</strong></p>
+            <p>Restaurant is: <strong>{activeLabel}</strong></p>
         </div>
     )}
 }
