@@ -34,4 +34,6 @@
     display:none;
 }
 
-#dateForm .
+#dateForm > form > input {
+    margin-right:20px;
+}
