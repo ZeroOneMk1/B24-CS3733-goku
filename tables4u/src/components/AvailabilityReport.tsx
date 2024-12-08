@@ -7,6 +7,8 @@ export default function AvailabilityReport({restaurantID}: {restaurantID?: strin
     
     const [generateStatus, setGenerateStatus] = useState("success");
 
+    const [report, setReport] = useState({});
+
     const [startDate, setStartDate] = useState(() => {
         const date = new Date();
         return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, "0")}-${(date.getDay()+1).toString().padStart(2, "0")}`;
@@ -19,6 +21,13 @@ export default function AvailabilityReport({restaurantID}: {restaurantID?: strin
 
     function generateAvailabityReport() {
         //ADD THIS
+    }
+
+    function Report({report}: {report?: any}) {
+
+        return (
+            <div id={styles.report}></div>
+        )
     }
     
     return (
@@ -39,6 +48,8 @@ export default function AvailabilityReport({restaurantID}: {restaurantID?: strin
                 {generateStatus !== "waiting" && generateStatus !== "success" &&
                     <p>Error: {generateStatus}</p>}
             </div>
+            <Report report={report} />
+
         </div>
     )
 }

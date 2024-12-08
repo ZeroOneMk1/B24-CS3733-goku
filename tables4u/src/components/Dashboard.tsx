@@ -71,11 +71,6 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
             }
         }
     }
-    
-    function avialabilityButtonDisplay() {
-        if(isAvailabilityReport) return "Generate Availabity Report";
-        return "Show Reservations"
-    }
 
     function AdminSelect() {
         return (
@@ -93,9 +88,10 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
                         <option key={restaurantInfo.restaurantID} value={restaurantInfo.restaurantID}>{restaurantInfo.name}</option>
                     ))}
                 </select>
-                <button id={styles.swapAvailabilityButton} onClick={() => setIsAvailabilityReport(!isAvailabilityReport)}>{avialabilityButtonDisplay()}</button>
+                <button id={styles.swapAvailabilityButton} onClick={() => setIsAvailabilityReport(!isAvailabilityReport)}>{isAvailabilityReport == true ? "Generate Availabity Report": "Show Reservations"}</button>
             </div>
-        )
+        )    
+    
     }
 
     function AvailabilityModules() {

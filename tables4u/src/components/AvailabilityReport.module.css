@@ -37,3 +37,11 @@
 #dateForm > form > input {
     margin-right:20px;
 }
+
+#report {
+    background-color: var(--color--foreground);
+    display: flex;
+    height: 100%;
+    border-radius: 0.5em;
+    padding: 0 1em 1em 0;
+}
