@@ -9,7 +9,7 @@ import ReviewAvailability from "./ReviewAvailability";
 import type { RestaurantInfo } from "./contexts";
 import { RestaurantInfoContext, TablesInfoContext } from "./contexts";
 
-export function Dashboard({ restaurantID } : { restaurantID?: string }) {
+export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
     const [restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo>({
         name: "",
         address: "",
@@ -19,6 +19,8 @@ export function Dashboard({ restaurantID } : { restaurantID?: string }) {
     });
 
     const [tablesInfo, setTablesInfo] = useState([{ number: 0, seats: 0 }]);
+
+    const [restaurantID, setRestaurantID] = useState("");
 
     const [restaurantInfoStatus, setRestaurantInfoStatus] = useState("waiting");
 
@@ -51,7 +53,50 @@ export function Dashboard({ restaurantID } : { restaurantID?: string }) {
         } else setRestaurantInfoStatus(result.error);
     }
 
-    useEffect(() => { getRestaurantInfo(); }, [restaurantID]);
+    function showAdmin() {
+        if(restaurantInfoStatus !== "success") {
+            return styles.adminSelect;
+        } else {
+            return styles.adminHidden;
+        }
+    }
+
+    function infoFromID(rID: string) {
+        for(const restaurant of restaurantList ?? []) {
+            if(restaurant.restaurantID == rID) {
+                return restaurant;
+            }
+        }
+    }
+
+    function AdminSelect() {
+        return (
+            <div id={showAdmin()}>
+                <h1>Administrator Dashboard</h1>
+                <select name="restaurants" id="restaurants" defaultValue={restaurantID} onChange={(event) => {
+                    if(restaurantID !== event.target.value) {
+                        setRestaurantID(event.target.value);
+                        setRestaurantInfo(infoFromID(event.target.value));
+                        setRestaurantInfoStatus("adminSuccess");
+                    }
+                }}>
+                    <option value="" disabled>Select Restaurant</option>
+                    {restaurantList?.map((restaurantInfo) => (
+                        <option key={restaurantInfo.restaurantID} value={restaurantInfo.restaurantID}>{restaurantInfo.name}</option>
+                    ))}
+                </select>
+            </div>
+        )
+    }
+
+    if(restaurantList == undefined) {
+        useEffect(() => { getRestaurantInfo(); }, [restaurantID]);
+    } else if (restaurantID == ""){
+        useEffect(() => setRestaurantInfoStatus("admin"));
+    } else {
+        useEffect(() => setRestaurantInfoStatus("adminSuccess"));
+    }
+
 
     if (restaurantInfoStatus == "waiting") {
         return (
@@ -59,7 +104,11 @@ export function Dashboard({ restaurantID } : { restaurantID?: string }) {
                 <h1>Waiting...</h1>
             </div>
         )
-    } else if (restaurantInfoStatus !== "success") {
+    } else if(restaurantInfoStatus == "admin") {
+        return (
+            <AdminSelect/>
+        )
+    } else if (restaurantInfoStatus !== "success" && restaurantInfoStatus !== "adminSuccess") {
         return (
             <div id={styles.restaurantDetailsPlaceholder}>
                 <h1>Oops!</h1>
@@ -73,12 +122,13 @@ export function Dashboard({ restaurantID } : { restaurantID?: string }) {
                 <TablesInfoContext.Provider value={{ tablesInfo, setTablesInfo }}>
                     <div id={styles.content}>
                         <div id={styles.restaurantDetails}>
+                            <AdminSelect/>
                             <h1>Restaurant Details</h1>
-                            <BasicInformation isAdmin={!!restaurantID} />
-                            <Tables isActive={restaurantInfo.isActive || !!restaurantID} />
+                            <BasicInformation isAdmin={restaurantList !== undefined} />
+                            <Tables isActive={restaurantInfo.isActive || typeof restaurantList != undefined} />
                             <AccountOptions restaurantInfo={restaurantInfo} />
                         </div>
-                        <ReviewAvailability />
+                        <ReviewAvailability restaurantID={restaurantID}/>
                     </div>
                 </TablesInfoContext.Provider>
             </RestaurantInfoContext.Provider>

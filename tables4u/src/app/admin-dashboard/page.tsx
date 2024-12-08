@@ -50,16 +50,7 @@ export default function AdminDashboard() {
 
     return (
         <div id="admin-dashboard-panel">
-            <h1>Administrator Dashboard</h1>
-            <select name="restaurants" id="restaurants" defaultValue="" onChange={(event) => {
-                setSelectedRestaurant(event.target.value);
-            }}>
-                <option value="" disabled>Select Restaurant</option>
-                {restaurantList.map((restaurantInfo) => (
-                    <option key={restaurantInfo.restaurantID} value={restaurantInfo.restaurantID}>{restaurantInfo.name}</option>
-                ))}
-            </select>
-            <Dashboard restaurantID={selectedRestaurant}/>
+            <Dashboard restaurantList={restaurantList}/>
             {/* <p id="admin-restaurant-list-error">{listError}</p>
             <Restaurants restaurantsInfo={restaurantList}/>
             <button onClick={logout}>Logout</button> */}

@@ -4,7 +4,7 @@ import { ReservationInfo } from "./contexts";
 
 import styles from "./ReviewAvailability.module.css";
 
-export default function ReviewAvailability() {
+export default function ReviewAvailability({restaurantID}: {restaurantID?: string}) {
     const [refreshStatus, setRefreshStatus] = useState("success");
     const [reservations, setReservations] = useState<ReservationInfo[]>([]);
     const [utilReport, setUtilReport] = useState<number | null>(null);
@@ -29,10 +29,19 @@ export default function ReviewAvailability() {
 
         // form request body
         const url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/ReviewDaysAvailability";
-        const body = JSON.stringify({
-            date: formatDate(date),
-            jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2)
-        });
+        let body;
+        if(restaurantID == undefined) {
+            body = JSON.stringify({
+                date: formatDate(date),
+                jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2)
+            });
+        } else {
+            body = JSON.stringify({
+                date: formatDate(date),
+                jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2),
+                restaurantID: restaurantID
+            });
+        }
 
         // send request
         const response = await fetch(url, { method: "POST", body });
@@ -68,6 +77,13 @@ export default function ReviewAvailability() {
         setToggling(false);
     }
 
+    function showButton() {
+        if(restaurantID == undefined) {
+            return styles.availabilityHidden;
+        }
+            return;
+    }
+
     useEffect(() => {refreshReservations()}, [])
 
     return (
@@ -86,7 +102,7 @@ export default function ReviewAvailability() {
                     </form>
                     <div>
                     <p>Day is <strong>{(open) ? "Open" : "Closed"}</strong></p>
-                    <button className="small" onClick={openCloseDay}>{toggleButtonText}</button>
+                    <button className="small" onClick={openCloseDay} id={showButton()}>{toggleButtonText}</button>
                     </div>
                 </div>
                 {refreshStatus !== "waiting" && refreshStatus !== "success" &&

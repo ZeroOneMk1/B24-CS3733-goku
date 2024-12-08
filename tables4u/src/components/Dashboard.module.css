@@ -5,8 +5,12 @@
     gap: 1em;
 }
 
-#restaurantDetails, #restaurantDetailsPlaceholder {
+#restaurantDetails, #restaurantDetailsPlaceholder, #adminSelect {
     width: 20em;
     display: flex;
     flex-direction: column;
+}
+
+#adminHidden {
+    display:none;
 }
