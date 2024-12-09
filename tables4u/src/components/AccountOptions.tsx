@@ -5,9 +5,10 @@ import { RestaurantInfo } from './contexts';
 
 import styles from './AccountOptions.module.css'
 
-export default function AccountOptions({ restaurantInfo, restaurantID }: {
+export default function AccountOptions({ restaurantInfo, restaurantID, justLogout }: {
     restaurantInfo: RestaurantInfo,
-    restaurantID?: string
+    restaurantID?: string,
+    justLogout?: boolean
 }) {
     const router = useRouter();
     const [ deleteRestaurantStatus, setDeleteRestaurantStatus ] = useState(" ");
@@ -45,6 +46,13 @@ export default function AccountOptions({ restaurantInfo, restaurantID }: {
         router.push("/");
     }
     
+    if(justLogout == true)
+        return(
+            <div id={styles.accountOptions}>
+                <h2>Account Options</h2>
+                <button onClick={logout}>Logout</button>
+            </div>
+        )
     return (
         <div id={styles.accountOptions}>
             <h2>Account Options</h2>

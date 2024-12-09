@@ -57,16 +57,16 @@ export default function AvailabilityReport({restaurantID}: {restaurantID?: strin
             <div id={styles.report}>
                 <div id={styles.gridContainer}>
                     <div id={styles.grid} style={{
-                        gridTemplateRows: `repeat(${2}, 1fr)`,
+                        gridTemplateRows: `repeat(${1} 1fr)`,
                         gridTemplateColumns: `repeat(${report.length + 1}, 1fr)`
                     }}>
-                        <div>
+                        <div id={styles.reportBlock}>
                             <p>Date: </p>
                             <p>Utilization: </p>
                             <p>Availability: </p>
                         </div>
                         { report.map((reportInfo: any) => (
-                        <div>
+                        <div id={styles.reportBlock}>
                             <p>{reportInfo.date}</p>
                             <p>{reportInfo.utilization * 100.0}%</p>
                             <p>{reportInfo.availability * 100.0}%</p>

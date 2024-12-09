@@ -59,6 +59,7 @@
     height: 100%;
     display: grid;
     column-gap: 20px;
+    row-gap:30px;
 }
 
 #info {
@@ -68,4 +69,15 @@
     align-items: center;
     margin-top: 3em;
     width: 5em;
+}
+
+#reportBlock {
+    justify-content: space-between;
+    margin-left:2em;
+    margin-top:3em;
+    line-height:3;
+}
+
+#reportBlock>p {
+    font-size:large;
 }

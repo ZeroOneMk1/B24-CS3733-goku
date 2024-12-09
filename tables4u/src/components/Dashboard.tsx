@@ -96,7 +96,6 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
                         <option key={restaurantInfo.restaurantID} value={restaurantInfo.restaurantID}>{restaurantInfo.name}</option>
                     ))}
                 </select>
-                <button id={styles.swapAvailabilityButton} onClick={() => setIsAvailabilityReport(!isAvailabilityReport)}>{isAvailabilityReport == false ? "Generate Availabity Report": "Show Reservations"}</button>
             </div>
         )    
     
@@ -124,7 +123,10 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
         )
     } else if(restaurantInfoStatus == "admin") {
         return (
-            <AdminSelect/>
+            <div>
+                <AdminSelect/>
+                <AccountOptions restaurantInfo={ restaurantInfo } justLogout={true}/>
+            </div>
         )
     } else if (restaurantInfoStatus !== "success" && restaurantInfoStatus !== "adminSuccess") {
         return (
@@ -141,6 +143,7 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
                     <div id={styles.content}>
                         <div id={styles.restaurantDetails}>
                             <AdminSelect/>
+                            <button id={restaurantList == undefined ? styles.adminHidden : styles.swapAvailabilityButton} onClick={() => setIsAvailabilityReport(!isAvailabilityReport)}>{isAvailabilityReport == false ? "Generate Availabity Report": "Show Reservations"}</button>
                             <h1>Restaurant Details</h1>
                             <BasicInformation isAdmin={restaurantList !== undefined} />
                             <Tables isActive={restaurantInfo.isActive || !(restaurantList == undefined)} />
