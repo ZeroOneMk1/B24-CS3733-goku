@@ -29,18 +29,29 @@ export const handler = async (event) => {
     return parseInt(timeStr, 10);
   };
 
+  const getDayOpen = async (dayID) => {
+    const [rows] = await pool.query(
+      "SELECT isOpen FROM days WHERE dayID =?",
+      [dayID]
+    )
+    if (rows.length === 0) {
+      return 1;
+    }
+    return rows[0].isOpen;
+  };
+
   //find all tables w/ restaurant ID
   const getTables = async (restaurantID) => {
     const [rows] = await pool.query(
       "SELECT * FROM tables WHERE restaurantID = ?",
       [restaurantID]
     );
-    if (rows.length === 0){
+    if (rows.length === 0) {
       return null;
     }
     return rows;
   }
-    
+
   //get day id using date
   const getDayID = async (restaurantID, date) => {
     const formattedDate = formatDate(date);
@@ -54,10 +65,9 @@ export const handler = async (event) => {
     return rows[0].dayID;  
   };
 
- 
   const getReservations = async (dayID, tableIDs) => {
     const [rows] = await pool.query(
-      "SELECT * FROM reservations WHERE tableID IN (?) AND dayID = ?",
+      "SELECT customerCount, email, confirmationCode, time, number AS tableNumber FROM reservations NATURAL JOIN tables WHERE tableID IN (?) AND dayID = ?",
       [tableIDs, dayID]
     );
     return rows;
@@ -124,9 +134,15 @@ export const handler = async (event) => {
 
     const dayID = await getDayID(restaurantID, date);
     if (!dayID) {
+      // Return success with empty reservations if no day found
       return {
-        statusCode: 400,
-        error: "No reservations found for this day"
+        statusCode: 200,
+        response: {
+          tables: [],
+          reservations: [],
+          utilReport: 0,
+          isOpen: 1
+        }
       };
     }
 
@@ -140,21 +156,23 @@ export const handler = async (event) => {
 
     const tableIDs = await getTableIDs(restaurantID);
     const reservations = await getReservations(dayID, tableIDs);
+    const isOpen = await getDayOpen(dayID);
 
     const totalCustomers = await getTotalCustomers(tableIDs, dayID);
     const totalSeats = await getTotalSeats(restaurantID);
     const openingTime = await getOpenTime(restaurantID);
     const closingTime = await getCloseTime(restaurantID);
 
-    const utilReport = totalCustomers/(totalSeats*(closingTime - openingTime));
-    
+    const utilReport = totalCustomers / (totalSeats * (closingTime - openingTime));
 
+    // Return reservations even if it's an empty list
     return {
       statusCode: 200,
       response: {
         tables, 
-        reservations,
-        utilReport
+        reservations, // Even if empty, we return it as part of the response
+        utilReport,
+        isOpen
       }
     };
   };
@@ -162,6 +180,3 @@ export const handler = async (event) => {
   const result = await reviewDaysAvailability(event.date);
   return result;
 };
-
-
-

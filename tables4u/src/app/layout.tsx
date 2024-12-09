@@ -14,9 +14,13 @@ export default function Layout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" type="image/png" href="https://iteration1.s3.us-east-1.amazonaws.com/favicon.png"/>
+        <title>Tables4U</title>
+      </head>
       <body>
         <nav id={styles.nav}>
-          <ul><li><a href="/"><strong>tables4u</strong></a></li></ul>
+          <ul><li><a href="/"><strong>Tables4U</strong></a></li></ul>
           <ul>
             <li><a href="/create-restaurant">Create</a></li>
             <li><a href="/reserve">Reserve</a></li>

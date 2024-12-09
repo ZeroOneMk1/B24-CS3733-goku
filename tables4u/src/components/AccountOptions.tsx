@@ -1,17 +1,13 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { FormEvent, useState } from "react";
+import { useState } from "react";
+import { RestaurantInfo } from './contexts';
 
-export default function DeleteRestaurant({
-    restaurantInfo
-}: {
-    restaurantInfo: {
-        name: string,
-        address: string,
-        isActive: boolean,
-        openingTime: number,
-        closingTime: number,
-    }
+import styles from './AccountOptions.module.css'
+
+export default function AccountOptions({ restaurantInfo, restaurantID }: {
+    restaurantInfo: RestaurantInfo,
+    restaurantID?: string
 }) {
     const router = useRouter();
     const [ deleteRestaurantStatus, setDeleteRestaurantStatus ] = useState(" ");
@@ -25,6 +21,7 @@ export default function DeleteRestaurant({
         setDeleteRestaurantStatus("Deleting...");
         const url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/DeleteRestaurant";
         const body = JSON.stringify({
+            restaurantID: restaurantID ?? null,
             jwt: document.cookie.match(new RegExp(`(^| )jwt=([^;]+)`))?.at(2),
         });
 
@@ -32,17 +29,28 @@ export default function DeleteRestaurant({
         const result = await response.json();
 
         if (result.statusCode == 200) {
-            // set status, delete cookie, and return to index
-            setDeleteRestaurantStatus("Deleted, redirecting...");
-            document.cookie = "jwt=;";
-            setTimeout(() => router.push("/"), 2000);
+            if(restaurantID == "") {
+                // set status, delete cookie, and return to index
+                setDeleteRestaurantStatus("Deleted, redirecting...");
+                document.cookie = "jwt=;";
+                setTimeout(() => router.push("/"), 2000);
+            } else {
+                window.location.reload();
+            }
         } else setDeleteRestaurantStatus(result.error);
+    }
+
+    function logout() {
+        document.cookie = "jwt=;";
+        router.push("/");
     }
     
     return (
-        <div id="delete-restaurant">
+        <div id={styles.accountOptions}>
+            <h2>Account Options</h2>
             <button onClick={deleteRestaurant} disabled={isDisabled}>Delete restaurant</button>
             <p>{deleteRestaurantStatus}</p>
+            <button onClick={logout}>Logout</button>
         </div>
     )
 }
