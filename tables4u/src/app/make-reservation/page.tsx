@@ -147,7 +147,7 @@ export default function MakeReservation({ searchParams }: { searchParams: { rest
                 {/* <p>Restaurant: {restaurantID}</p> */}
                 <p><strong>{restaurant.name}</strong></p>
                 <p>{restaurant.address}</p>
-                <p>4 guests &middot; Monday, November 11th</p>
+                <p>{guestCount} guest{parseInt(guestCount) > 1 ? "s" : ""} &middot; Monday, November 11th</p>
                 {/* Date Input */}
                 <div className="find-input">
                     <label htmlFor="date">Day: </label>
