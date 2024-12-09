@@ -45,6 +45,7 @@ export default function MakeReservation({ searchParams }: { searchParams: { rest
     const [loading, setLoading] = useState<boolean>(false);
     const [message, setMessage] = useState<string>("");
     const [reservationCode, setReservationCode] = useState<number>(0);
+    const [formattedDate, setFormattedDate] = useState<string>("No date set");
 
     let hasReserved = !!reservationCode;
 
@@ -100,6 +101,18 @@ export default function MakeReservation({ searchParams }: { searchParams: { rest
             getAvailableTimes(date, parseInt(guestCount));
     }, [date, guestCount]);
 
+    useEffect(() => {
+        if (date) {
+            console.log('Date:', date);
+            const [year, month, day] = date.split('-').map(Number);
+            const dateObj = new Date(year, month - 1, day); // month is 0-indexed
+            const options: Intl.DateTimeFormatOptions = { weekday: 'long', month: 'long', day: 'numeric' };
+            setFormattedDate(dateObj.toLocaleDateString(undefined, options));
+        } else {
+            setFormattedDate("No date set");
+        }
+    }, [date]);
+
     async function handleSubmit(event: React.FormEvent) {
         event.preventDefault();
     
@@ -147,7 +160,7 @@ export default function MakeReservation({ searchParams }: { searchParams: { rest
                 {/* <p>Restaurant: {restaurantID}</p> */}
                 <p><strong>{restaurant.name}</strong></p>
                 <p>{restaurant.address}</p>
-                <p>{guestCount} guest{parseInt(guestCount) > 1 ? "s" : ""} &middot; Monday, November 11th</p>
+                <p>{guestCount} guest{parseInt(guestCount) > 1 ? "s" : ""} &middot; {formattedDate}</p>
                 {/* Date Input */}
                 <div className="find-input">
                     <label htmlFor="date">Day: </label>
