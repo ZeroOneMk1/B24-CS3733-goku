@@ -48,7 +48,7 @@ export const handler = async (event) => {
         error: "Unable to create database connection"
     };
 
-    // try {
+    try {
     let query;
     const filters = event.filters;
     const onlyShowAvailableRestaurants = filters.date !== "";
@@ -92,18 +92,24 @@ export const handler = async (event) => {
         query = `SELECT restaurantID FROM restaurants WHERE name LIKE ? AND isActive = true`; //  
         const searchTerm = `%${filters.name}%`;
         [restaurantIDs, restauranterror] = await pool.query(query, [searchTerm]);
-        if (restaurantIDs.length === 0) return {
-            statusCode: 200,
-            restaurants: []
-        };
+        if (restaurantIDs.length === 0){
+            pool.end();
+            return {
+                statusCode: 200,
+                restaurants: []
+            };
+        } 
     } else {
         // Find all restaurantIDs.
         query = `SELECT restaurantID FROM restaurants WHERE isActive = true`; //  
         [restaurantIDs, restauranterror] = await pool.query(query);
-        if (restaurantIDs.length === 0) return {
-            statusCode: 200,
-            restaurants: []
-        };
+        if (restaurantIDs.length === 0){
+            pool.end();
+            return {
+                statusCode: 200,
+                restaurants: []
+            };
+        }
     }
     restaurantIDs = restaurantIDs.map(restaurant => restaurant.restaurantID);
 
@@ -117,6 +123,17 @@ export const handler = async (event) => {
     let finalRestaurantInfos;
     let restaurantError;
     if (onlyShowAvailableRestaurants) {
+        // Remove restaurants that are not open on the requested date.
+        query = `SELECT restaurantID FROM days WHERE date = ? AND isOpen = false AND restaurantID IN (?)`;
+        const [closedRestaurants, closedRestaurantsError] = await pool.query(query, [datestring, restaurantIDs]);
+        restaurantIDs = restaurantIDs.filter(restaurantID => !closedRestaurants.map(restaurant => restaurant.restaurantID).includes(restaurantID));
+        if (restaurantIDs.length === 0) {
+            pool.end();
+            return {
+                statusCode: 200,
+                restaurants: []
+            };
+        }
         let timeint;
         if (filters.time !== "") {
             // isolate the hour from the time string HH:MM to HH
@@ -140,6 +157,7 @@ export const handler = async (event) => {
         if (dayIDs.length == 0) {
             query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
             [finalRestaurantInfos, restaurantError] = await pool.query(query, [restaurantIDs]);
+            pool.end();
             return {
                 statusCode: 200,
                 restaurants: finalRestaurantInfos
@@ -160,6 +178,7 @@ export const handler = async (event) => {
             if (reservationIDs.length === 0) {
                 query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
                 [finalRestaurantInfos, restaurantError] = await pool.query(query, [restaurantIDs]);
+                pool.end();
                 return {
                     statusCode: 200,
                     restaurants: finalRestaurantInfos
@@ -172,6 +191,7 @@ export const handler = async (event) => {
             if (reservationIDs.length === 0) {
                 query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
                 [finalRestaurantInfos, restaurantError] = await pool.query(query, [restaurantIDs]);
+                pool.end();
                 return {
                     statusCode: 200,
                     restaurants: finalRestaurantInfos
@@ -228,7 +248,7 @@ export const handler = async (event) => {
             restaurantIDs = validRestaurants.map(restaurant => restaurant.restaurantID);
         }
         // Find the restaurant information for the restaurantIDs.
-        query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
+        query = `SELECT restaurantID, name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
         [finalRestaurantInfos, restaurantError] = await pool.query(query, [restaurantIDs]);
     }
     pool.end();
@@ -236,12 +256,13 @@ export const handler = async (event) => {
         statusCode: 200,
         restaurants: finalRestaurantInfos
     };
-    // } catch (error) {
-    //     return {
-    //         statusCode: 500,
-    //         error: "Internal server error",
-    //         error_verbose: error.message
-    //     };
-    // }
+    } catch (error) {
+        pool.end();
+        return {
+            statusCode: 500,
+            error: "Internal server error",
+            error_verbose: error.message
+        };
+    }
 
 };
