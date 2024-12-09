@@ -5,6 +5,7 @@ import BasicInformation from "./BasicInformation";
 import Tables from "./Tables";
 import AccountOptions from "./AccountOptions";
 import ReviewAvailability from "./ReviewAvailability";
+import AvailabilityReport from "./AvailabilityReport";
 
 import type { RestaurantInfo } from "./contexts";
 import { RestaurantInfoContext, TablesInfoContext } from "./contexts";
@@ -23,6 +24,8 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
     const [restaurantID, setRestaurantID] = useState("");
 
     const [restaurantInfoStatus, setRestaurantInfoStatus] = useState("waiting");
+
+    const [isAvailabilityReport, setIsAvailabilityReport] = useState<boolean>(false);
 
     async function getRestaurantInfo(restaurantID: string) {
         const url = process.env.NEXT_PUBLIC_FUNCTION_URL + "/GetRestaurantInfo";
@@ -94,7 +97,13 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
                     ))}
                 </select>
             </div>
-        )
+        )    
+    
+    }
+
+    function AvailabilityModules() {
+        if(isAvailabilityReport) return  <AvailabilityReport restaurantID={restaurantID}/>;
+        return <ReviewAvailability restaurantID={restaurantID}/>;
     }
 
     if(restaurantList == undefined) {
@@ -114,7 +123,10 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
         )
     } else if(restaurantInfoStatus == "admin") {
         return (
-            <AdminSelect/>
+            <div>
+                <AdminSelect/>
+                <AccountOptions restaurantInfo={ restaurantInfo } justLogout={true}/>
+            </div>
         )
     } else if (restaurantInfoStatus !== "success" && restaurantInfoStatus !== "adminSuccess") {
         return (
@@ -131,12 +143,13 @@ export function Dashboard({restaurantList} : { restaurantList?: any[]}) {
                     <div id={styles.content}>
                         <div id={styles.restaurantDetails}>
                             <AdminSelect/>
+                            <button id={restaurantList == undefined ? styles.adminHidden : styles.swapAvailabilityButton} onClick={() => setIsAvailabilityReport(!isAvailabilityReport)}>{isAvailabilityReport == false ? "Generate Availabity Report": "Show Reservations"}</button>
                             <h1>Restaurant Details</h1>
                             <BasicInformation isAdmin={restaurantList !== undefined} />
                             <Tables isActive={restaurantInfo.isActive || !(restaurantList == undefined)} />
                             <AccountOptions restaurantInfo={restaurantInfo} restaurantID={restaurantID} />
                         </div>
-                        <ReviewAvailability restaurantID={restaurantID}/>
+                        <AvailabilityModules/>
                     </div>
                 </TablesInfoContext.Provider>
             </RestaurantInfoContext.Provider>
