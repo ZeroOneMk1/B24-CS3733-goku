@@ -11,6 +11,12 @@
     flex-direction: column;
 }
 
+#swapAvailabilityButton {
+    margin-top:10px;
+    margin-bottom:10px;
+    width: 20em;
+}
+
 #adminHidden {
     display:none;
 }

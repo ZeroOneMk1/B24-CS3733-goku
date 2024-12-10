@@ -24,7 +24,7 @@ export default function Reservation({ reservationInfo, refreshReservations, isAd
         const result = await response.json();
 
         if (result.statusCode == 200) {
-            setDeleteReservationText("");
+            setDeleteReservationText("deleted");
             refreshReservations();
         } else {
             setDeleteReservationText("Error: " + result.error);
@@ -45,11 +45,15 @@ export default function Reservation({ reservationInfo, refreshReservations, isAd
                 <p>{guestText} @ {reservationInfo.time}</p>
             </button>
         )
-    } else if (isAdmin) {
+    } else if (isAdmin && deleteReservationText !== "deleted") {
         return (
             <div id={styles.reservation} style={style}>
                 <p>{deleteReservationText}</p>
             </div>   
+        )
+    } else if (isAdmin) {
+        return (
+            <div></div>
         )
     } else {
         return (
