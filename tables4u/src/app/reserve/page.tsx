@@ -1,6 +1,7 @@
 'use client';
 import { useState, FormEvent, useEffect } from "react";
 import Link from 'next/link';
+import styles from './page.module.css';
 
 interface FilterRequestBody {
     filters: {
@@ -49,27 +50,24 @@ export default function List() {
         <div id="find-restaurant">
             <h1>Find a Restaurant</h1>
             <form onSubmit={submit} method="post">
-                <div> 
-                    <div className="find-input">                  
-                        <label htmlFor="name">Restaurant Name: </label>
-                        <input  type="text" name="name" value={name}
-                            placeholder="Restaurant Name (Leave empty to show all)"
-                            onChange={(e) => setName(e.target.value)} 
-                        />
-                    </div>
-                    <div className="find-input">
+                <div id={styles.filters}> 
+                    <input  type="text" name="name" value={name} id={styles.searchRestaurants}
+                        placeholder="Restaurant Name (Leave empty to show all)"
+                        onChange={(e) => setName(e.target.value)} 
+                    />
+                    <div className={styles.findInput}>
                         <label htmlFor="date">Day: </label>
                         <input type="date" name="date" value={date} 
                             onChange={(e) => setDate(e.target.value)} 
                         />
                     </div>
-                    <div className="find-input">
+                    <div className={styles.findInput}>
                         <label htmlFor="time">Time: </label>
                         <input type="time" name="time" value={time} 
                             onChange={(e) => setTime(e.target.value)} 
                         />
                     </div>
-                    <div className="find-input">
+                    <div className={styles.findInput}>
                         <label htmlFor="guestCount">Guest Count: </label>
                         <select name="guestCount" value={guestCount} 
                             onChange={(e) => setGuestCount(e.target.value)}>
@@ -77,23 +75,27 @@ export default function List() {
                         </select>
                     </div> 
                 </div>
-                <button type="submit">Search</button>
+                <div id={styles.actions}>
+                    <button type="submit">Search</button>
+                    <a href="/find-reservation">Find or Cancel Reservation</a>
+                </div>
             </form>
-
-            {/* Display restaurants if found */}
-            { listRestaurantsStatus == "" && 
-                <ul>
-                    {restaurants.map((restaurant, index) => (
-                        <li key={index}>
-                            <Link href={`/make-reservation?restaurantID=${encodeURIComponent(restaurant.restaurantID)}`}>
-                                <h3>{restaurant.name}</h3>
-                            </Link>
-                            <p>{restaurant.address}</p>
-                        </li>
-                    ))}
-                </ul>
-            }
-            { listRestaurantsStatus != "" && <p>{listRestaurantsStatus}</p>}
+            <div id={styles.restaurants}>
+                { listRestaurantsStatus == "" && 
+                    <ul>
+                        {restaurants.map((restaurant, index) => (
+                            <li key={index}>
+                                <Link href={`/make-reservation?restaurantID=${encodeURIComponent(restaurant.restaurantID)}`}
+                                    className={styles.restaurant}>
+                                    <h2>{restaurant.name}</h2>
+                                    <p>{restaurant.address}</p>
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                }
+                { listRestaurantsStatus != "" && <p>{listRestaurantsStatus}</p>}
+            </div>
         </div>
     );
 }
