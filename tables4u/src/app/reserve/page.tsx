@@ -89,6 +89,7 @@ export default function List() {
                                     className={styles.restaurant}>
                                     <h2>{restaurant.name}</h2>
                                     <p>{restaurant.address}</p>
+                                    <p>Open {restaurant.openingTime} to {restaurant.closingTime}</p>
                                 </Link>
                             </li>
                         ))}
