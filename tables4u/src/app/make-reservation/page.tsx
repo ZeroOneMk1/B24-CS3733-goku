@@ -47,6 +47,7 @@ export default function MakeReservation({ searchParams }:
     const [loading, setLoading] = useState<boolean>(false);
     const [message, setMessage] = useState<string>("");
     const [reservationCode, setReservationCode] = useState<number>(0);
+    const [formattedDate, setFormattedDate] = useState<string>("No date set");
 
     let hasReserved = !!reservationCode;
 
