@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation';
 import ReservationInfo from '../ReservationInfo';
 import { FormEvent } from 'react';
+import styles from './page.module.css';
 
 export default function FindReservation({
     searchParams
@@ -36,17 +37,23 @@ export default function FindReservation({
 
     // render the reservation info if valid, and the find reservation page if not
     if (validCode && email) { return (
-        <ReservationInfo code={code} email={email} canDelete={true} />
+        <div id={styles.wrapper}>
+            <ReservationInfo code={code} email={email} canDelete={true} />
+        </div>
     )} else  { return (
-         <div>
-            <h1>Find Reservation</h1>
-            <form onSubmit={findReservation}>
-                <label htmlFor="email">Email</label>
-                <input required id="email" name="email" type="text" placeholder="Email"/>
-                <label htmlFor="code">Confirmation Code</label>
-                <input required id="code" name="code" type="text" placeholder="Confirmation Code"/>
-                <input type="submit" value="Find Reservation" />
-            </form>
+        <div id={styles.wrapper}>
+            <div id={styles.findReservation}>
+                <h1>Find Reservation</h1>
+                <form onSubmit={findReservation}>
+                    <div>
+                        <label htmlFor="email">Email</label>
+                        <input required id="email" name="email" type="text" placeholder="Email"/>
+                        <label htmlFor="code">Confirmation Code</label>
+                        <input required id="code" name="code" type="text" placeholder="Confirmation Code"/>
+                    </div>
+                    <input type="submit" value="Find Reservation" />
+                </form>
+            </div>
         </div>
     )}
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
+import styles from './ReservationInfo.module.css';
 
 export default function ReservationInfo({
     code, email, canDelete
@@ -80,7 +81,8 @@ export default function ReservationInfo({
 
     if (findReservationStatus == "success" && reservationInfo) {
         return (
-            <div>
+            <div id={styles.reservation}>
+                <h1>View Reservation</h1>
                 <div>
                     <h2>{reservationInfo.restaurant}</h2>
                     <p>{reservationInfo.guestCount} guests • {formatDateAndTime(reservationInfo.date, reservationInfo.time)}</p>
@@ -90,19 +92,21 @@ export default function ReservationInfo({
                     <h2>Your confirmation code is:</h2>
                     <h1>{reservationInfo.confirmation}</h1>
                 </div>
-                { canDelete && <button onClick={deleteReservation}>{deleteReservationText}</button> }
-                <a href="/find-reservation">Find another reservation</a>
+                <div id={styles.submit}>
+                    { canDelete && <button onClick={deleteReservation}>{deleteReservationText}</button> }
+                    <a href="/find-reservation">Find another reservation</a>
+                </div>
             </div>
         )
     } else if (findReservationStatus == "waiting") {
         return (
-            <div>
+            <div id={styles.reservation}>
                 <p>Waiting...</p>
             </div>
         )
     } else {
         return (
-            <div>
+            <div id={styles.reservation}>
                 <h1>Oops!</h1>
                 <p>Unable to find reservation: {findReservationStatus}</p>
                 <a href="/find-reservation">Try again</a>
