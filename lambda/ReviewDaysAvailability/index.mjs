@@ -8,9 +8,9 @@ export const handler = async (event) => {
     error: authError
   }
 
-  if (decoded.isAdmin) return {
-    statusCode: 401,
-    error: "Administrators cannot modify restaurant information"
+  if (decoded.isAdmin && event.restaurantID == undefined) return {
+    statusCode: 400,
+    error: "Administrators must provide a restaurantID"
   }
 
   // create database connection
@@ -130,10 +130,11 @@ export const handler = async (event) => {
 
   const reviewDaysAvailability = async (date) => {
     //find restaurant
-    const restaurantID = decoded.restaurantID;
+    const restaurantID = decoded.restaurantID ?? event.restaurantID;
 
     const dayID = await getDayID(restaurantID, date);
     if (!dayID) {
+      pool.end();
       // Return success with empty reservations if no day found
       return {
         statusCode: 200,
@@ -148,6 +149,7 @@ export const handler = async (event) => {
 
     const tables = await getTables(restaurantID);
     if (!tables) {
+      pool.end();
       return {
         statusCode: 404,
         error: "No tables found for this restaurant"
@@ -165,6 +167,8 @@ export const handler = async (event) => {
 
     const utilReport = totalCustomers / (totalSeats * (closingTime - openingTime));
 
+    pool.end();
+
     // Return reservations even if it's an empty list
     return {
       statusCode: 200,
@@ -177,6 +181,9 @@ export const handler = async (event) => {
     };
   };
 
+
+
   const result = await reviewDaysAvailability(event.date);
+  pool.end();
   return result;
 };
