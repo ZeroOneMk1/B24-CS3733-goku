@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 
 import ReservationInfo from '../(reservations)/ReservationInfo';
+import styles from './page.module.css';
 
 interface MakeReservationBody {
     name: string;
@@ -112,18 +113,6 @@ export default function MakeReservation({ searchParams }:
     async function handleSubmit(event: React.FormEvent) {
         event.preventDefault();
     
-        // Validate email
-        const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
-        if (!emailPattern.test(email)) {
-            alert("Please enter a valid email address");
-            return;
-        }
-    
-        // get submit button by ID
-        // disable it
-        const submitButton = document.getElementById("SubmitButton"); // oh my GOD don't do this
-        if (submitButton) submitButton.setAttribute("disabled", "true");
-    
         // Handle form submission logic here
         console.log(`Name: ${name}, Email: ${email}, Time: ${time}`);
         const payload: MakeReservationBody = {
@@ -151,54 +140,57 @@ export default function MakeReservation({ searchParams }:
 
     if (!restaurantInfo) {
         return (
-            <div>
-                <h1>Waiting...</h1>
+            <div id={styles.wrapper}>
+                <div id={styles.panel}>
+                    <h1>Waiting...</h1>
+                </div>
             </div>
         )
     } else if (!hasReserved) {
         return (
-            <div style={{ padding: '20px', maxWidth: '400px', margin: '0 auto', border: '1px solid #ccc', borderRadius: '10px' }}>
-                <h1>Make a Reservation</h1>
-                <div id="restaurant">
-                    <p><strong>{restaurant.name}</strong></p>
-                    <p>{restaurant.address}</p>
-                </div>
-                {/* Date Input */}
-                <div className="find-input">
-                    <label htmlFor="date">Day: </label>
-                    <input type="date" name="date" value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                    />
-                </div>
-                {/* Guest Count Input */}
-                <div className="find-input">
-                    <label htmlFor="guestCount">Guest Count: </label>
-                    <select
-                        name="guestCount"
-                        value={guestCount}
-                        onChange={(e) => setGuestCount(e.target.value)}>
-                        { [...Array(8)].map((_, i) => (<option key={i} value={i+1}>{i+1}</option>)) }
-                    </select>
-                </div>
-                {/* Name Input */}
-                <div className="find-input">
-                    <label htmlFor="name">Name: </label>
-                    <input type="text" name="name" value={name} required
-                        onChange={(e) => setName(e.target.value)}
-                    />
-                </div>
-                {/* Email Input */}
-                <div className="find-input">
-                    <label htmlFor="email">Email: </label>
-                    <input type="email" name="email" value={email} required
-                        onChange={(e) => setEmail(e.target.value)}
-                        title="Please enter a valid email address"
-                    />
-                </div>
-                <form onSubmit={handleSubmit}>
-                    <div>
+            <div id={styles.wrapper}>
+                <div id={styles.panel}>
+                    <h1>Make a Reservation</h1>
+                    <div id="restaurant">
+                        <p><strong>{restaurant.name}</strong></p>
+                        <p>{restaurant.address}</p>
+                    </div>
+                    {/* Date Input */}
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="date">Day: </label>
+                        <input type="date" name="date" value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                        />
+                    </div>
+                    {/* Guest Count Input */}
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="guestCount">Guest Count: </label>
+                        <select
+                            name="guestCount"
+                            value={guestCount}
+                            onChange={(e) => setGuestCount(e.target.value)}>
+                            { [...Array(8)].map((_, i) => (<option key={i} value={i+1}>{i+1}</option>)) }
+                        </select>
+                    </div>
+                    {/* Name Input */}
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="name">Name: </label>
+                        <input type="text" name="name" value={name} required
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Name"
+                        />
+                    </div>
+                    {/* Email Input */}
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="email">Email: </label>
+                        <input type="email" name="email" value={email} required
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Email Address"
+                        />
+                    </div>
+                    <form onSubmit={handleSubmit}>
                         <p>Select a time:</p>
-                        <div>
+                        <div id={styles.times}>
                             { loading && <p>{message}</p>}
                             { !loading && availableTimes.length > 0 && 
                                 availableTimes.map((availableTime) => (
@@ -206,23 +198,26 @@ export default function MakeReservation({ searchParams }:
                                         type="button"
                                         key={availableTime}
                                         onClick={() => setTime(availableTime)}
-                                        style={{
-                                            backgroundColor: time === availableTime ? 'lightblue' : 'white'
-                                        }}
+                                        className={(time == availableTime) ? styles.active : ""}
                                     >{availableTime}</button>
                                 ))
                             }
                             { !loading && availableTimes.length == 0 && <p>{message}</p> }
                         </div>
-                    </div>
-                    {/* Add other form fields here */}
-                    <button id="SubmitButton" type="submit"
-                        disabled={!name || !email || !time || !date}
-                        style={{ backgroundColor: (!name || !email || !time || !date) ? 'grey' : 'orange' }}>
-                        Reserve
-                    </button>
-                </form>
+                        <button id={styles.submitButton} type="submit"
+                            disabled={!name || !email || !time || !date}
+                            className={(!name || !email || !time || !date) ? "" : styles.active}>
+                            Place Reservation
+                        </button>
+                    </form>
+                </div>
             </div>
         );
-    } else return (<ReservationInfo code={reservationCode} email={email} canDelete={true} />);
+    } else {
+        return (
+            <div id={styles.wrapper}>
+                <ReservationInfo code={reservationCode} email={email} canDelete={true} />
+            </div>
+        );
+    }
 };
