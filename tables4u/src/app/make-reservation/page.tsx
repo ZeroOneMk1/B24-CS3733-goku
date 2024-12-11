@@ -96,6 +96,7 @@ export default function MakeReservation({ searchParams }:
             body: JSON.stringify({ restaurantID }),
         });
 
+        console.log(response);
         const data = await response.json();
         setRestaurantInfo(JSON.parse(data.body));
         setRestaurant({
