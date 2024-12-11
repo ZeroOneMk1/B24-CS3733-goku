@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 
 import ReservationInfo from '../(reservations)/ReservationInfo';
+import styles from './page.module.css';
 
 interface MakeReservationBody {
     name: string;
@@ -29,7 +30,8 @@ interface GetRestaurantInfoResponse {
     }[];
 }
 
-export default function MakeReservation({ searchParams }: { searchParams: { restaurantID: string}}) {
+export default function MakeReservation({ searchParams }:
+    { searchParams: { restaurantID: string, guestCount: string, date?: string}}) {
     const restaurantID = searchParams.restaurantID;
 
     const [name, setName] = useState<string>('');
@@ -39,8 +41,8 @@ export default function MakeReservation({ searchParams }: { searchParams: { rest
     const [restaurantInfo, setRestaurantInfo] = useState<GetRestaurantInfoResponse | null>(null);
 
     // run getAvailableTimes when date or guestCount changes
-    const [guestCount, setGuestCount] = useState("1");
-    const [date, setDate] = useState("");
+    const [guestCount, setGuestCount] = useState(searchParams.guestCount);
+    const [date, setDate] = useState( searchParams.date ?? "");
     const [availableTimes, setAvailableTimes] = useState<string[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [message, setMessage] = useState<string>("");
@@ -61,15 +63,23 @@ export default function MakeReservation({ searchParams }: { searchParams: { rest
         const openingTime = restaurantInfo.restaurantInfo.openingTime;
         const closingTime = restaurantInfo.restaurantInfo.closingTime;
         const times: string[] = [];
+        const calls: Promise<Response>[] = [];
         for (let i = openingTime; i < closingTime; i++) {
-            const response = await fetch(process.env.NEXT_PUBLIC_FUNCTION_URL + "/ListRestaurants", {
+            const call = fetch(process.env.NEXT_PUBLIC_FUNCTION_URL + "/ListRestaurants", {
                 method: "POST",
                 body: JSON.stringify({ filters: { name: restaurant.name, date: day, time: i.toString(),
                     guestCount: guestCount.toString(), onlyShowAvailableRestaurants: 'true' } }),
             });
+            calls.push(call);
+            await new Promise(r => setTimeout(r, 100)); // 100ms delay
+        }
 
+        const responses = await Promise.all(calls);
+        for (let i = 0; i < responses.length; i++) {
+            const response = responses[i];
+            const time = openingTime + i;
             const data = await response.json();
-            if (data.restaurants && data.restaurants.length > 0) times.push(i.toString());
+            if (data.restaurants && data.restaurants.length > 0) times.push(time.toString());
         }
 
         setAvailableTimes(times);
@@ -87,6 +97,7 @@ export default function MakeReservation({ searchParams }: { searchParams: { rest
             body: JSON.stringify({ restaurantID }),
         });
 
+        console.log(response);
         const data = await response.json();
         setRestaurantInfo(JSON.parse(data.body));
         setRestaurant({
@@ -94,39 +105,15 @@ export default function MakeReservation({ searchParams }: { searchParams: { rest
             address: JSON.parse(data.body).restaurantInfo.address
         });
     }
-    useEffect(() => { fetchRestaurantInfo() }, []);
 
+    useEffect(() => { fetchRestaurantInfo() }, []);
     useEffect(() => {
         if (date && guestCount && restaurantInfo)
             getAvailableTimes(date, parseInt(guestCount));
-    }, [date, guestCount]);
-
-    useEffect(() => {
-        if (date) {
-            console.log('Date:', date);
-            const [year, month, day] = date.split('-').map(Number);
-            const dateObj = new Date(year, month - 1, day); // month is 0-indexed
-            const options: Intl.DateTimeFormatOptions = { weekday: 'long', month: 'long', day: 'numeric' };
-            setFormattedDate(dateObj.toLocaleDateString(undefined, options));
-        } else {
-            setFormattedDate("No date set");
-        }
-    }, [date]);
+    }, [date, guestCount, restaurantInfo]);
 
     async function handleSubmit(event: React.FormEvent) {
         event.preventDefault();
-    
-        // Validate email
-        const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
-        if (!emailPattern.test(email)) {
-            alert("Please enter a valid email address");
-            return;
-        }
-    
-        // get submit button by ID
-        // disable it
-        const submitButton = document.getElementById("SubmitButton"); // oh my GOD don't do this
-        if (submitButton) submitButton.setAttribute("disabled", "true");
     
         // Handle form submission logic here
         console.log(`Name: ${name}, Email: ${email}, Time: ${time}`);
@@ -153,50 +140,59 @@ export default function MakeReservation({ searchParams }: { searchParams: { rest
         setReservationCode(data.confirmationCode);
     };
 
-    if (!hasReserved) {
+    if (!restaurantInfo) {
         return (
-            <div style={{ padding: '20px', maxWidth: '400px', margin: '0 auto', border: '1px solid #ccc', borderRadius: '10px' }}>
-                <h1>Make a Reservation</h1>
-                {/* <p>Restaurant: {restaurantID}</p> */}
-                <p><strong>{restaurant.name}</strong></p>
-                <p>{restaurant.address}</p>
-                <p>{guestCount} guest{parseInt(guestCount) > 1 ? "s" : ""} &middot; {formattedDate}</p>
-                {/* Date Input */}
-                <div className="find-input">
-                    <label htmlFor="date">Day: </label>
-                    <input type="date" name="date" value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                    />
+            <div id={styles.wrapper}>
+                <div id={styles.panel}>
+                    <h1>Waiting...</h1>
                 </div>
-                {/* Guest Count Input */}
-                <div className="find-input">
-                    <label htmlFor="guestCount">Guest Count: </label>
-                    <select
-                        name="guestCount"
-                        value={guestCount}
-                        onChange={(e) => setGuestCount(e.target.value)}>
-                        { [...Array(8)].map((_, i) => (<option key={i} value={i+1}>{i+1}</option>)) }
-                    </select>
-                </div>
-                {/* Name Input */}
-                <div className="find-input">
-                    <label htmlFor="name">Name: </label>
-                    <input type="text" name="name" value={name} required
-                        onChange={(e) => setName(e.target.value)}
-                    />
-                </div>
-                {/* Email Input */}
-                <div className="find-input">
-                    <label htmlFor="email">Email: </label>
-                    <input type="email" name="email" value={email} required
-                        onChange={(e) => setEmail(e.target.value)}
-                        title="Please enter a valid email address"
-                    />
-                </div>
-                <form onSubmit={handleSubmit}>
-                    <div>
+            </div>
+        )
+    } else if (!hasReserved) {
+        return (
+            <div id={styles.wrapper}>
+                <div id={styles.panel}>
+                    <h1>Make a Reservation</h1>
+                    <div id="restaurant">
+                        <p><strong>{restaurant.name}</strong></p>
+                        <p>{restaurant.address}</p>
+                    </div>
+                    {/* Date Input */}
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="date">Day: </label>
+                        <input type="date" name="date" value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                        />
+                    </div>
+                    {/* Guest Count Input */}
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="guestCount">Guest Count: </label>
+                        <select
+                            name="guestCount"
+                            value={guestCount}
+                            onChange={(e) => setGuestCount(e.target.value)}>
+                            { [...Array(8)].map((_, i) => (<option key={i} value={i+1}>{i+1}</option>)) }
+                        </select>
+                    </div>
+                    {/* Name Input */}
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="name">Name: </label>
+                        <input type="text" name="name" value={name} required
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Name"
+                        />
+                    </div>
+                    {/* Email Input */}
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="email">Email: </label>
+                        <input type="email" name="email" value={email} required
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Email Address"
+                        />
+                    </div>
+                    <form onSubmit={handleSubmit}>
                         <p>Select a time:</p>
-                        <div>
+                        <div id={styles.times}>
                             { loading && <p>{message}</p>}
                             { !loading && availableTimes.length > 0 && 
                                 availableTimes.map((availableTime) => (
@@ -204,27 +200,26 @@ export default function MakeReservation({ searchParams }: { searchParams: { rest
                                         type="button"
                                         key={availableTime}
                                         onClick={() => setTime(availableTime)}
-                                        style={{
-                                            backgroundColor: time === availableTime ? 'lightblue' : 'white'
-                                        }}
+                                        className={(time == availableTime) ? styles.active : ""}
                                     >{availableTime}</button>
                                 ))
                             }
                             { !loading && availableTimes.length == 0 && <p>{message}</p> }
                         </div>
-                    </div>
-                    {/* Add other form fields here */}
-                    <button id="SubmitButton" type="submit"
-                        disabled={!name || !email || !time || !date}
-                        style={{ backgroundColor: (!name || !email || !time || !date) ? 'grey' : 'orange' }}>
-                        Reserve
-                    </button>
-                </form>
+                        <button id={styles.submitButton} type="submit"
+                            disabled={!name || !email || !time || !date}
+                            className={(!name || !email || !time || !date) ? "" : styles.active}>
+                            Place Reservation
+                        </button>
+                    </form>
+                </div>
             </div>
         );
     } else {
         return (
-            <ReservationInfo code={reservationCode} email={email} canDelete={true} />
+            <div id={styles.wrapper}>
+                <ReservationInfo code={reservationCode} email={email} canDelete={true} />
+            </div>
         );
     }
 };

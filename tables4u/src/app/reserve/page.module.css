@@ -1,0 +1,55 @@
+.findInput {
+    display: flex;
+    gap: 0.5em;
+}
+
+#searchRestaurants {
+    width: 20em;
+}
+
+#filters {
+    display: flex;
+    gap: 1em;
+    margin-bottom: 1em;
+    flex-wrap: wrap;
+}
+
+#actions {
+    display: flex;
+    gap: 2em;
+    align-items: center;
+}
+
+#restaurants ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    padding: 0;
+    gap: 1em;
+}
+
+#restaurants li {
+    list-style-type: none;
+    flex-grow: 1;
+    width: 15em;
+    height: 7.5em;
+    background-color: var(--color--foreground);
+    border-radius: 0.25em;
+    display: flex;
+}
+
+#restaurants>p {
+    margin-top: 1em;
+}
+
+.restaurant {
+    width: 100%;
+    height: 100%;
+    display: block;
+    text-decoration: none;
+    padding: 0.5em;
+}
+
+.restaurant h2 {
+    margin: 0;
+}

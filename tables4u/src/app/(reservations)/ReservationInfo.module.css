@@ -1,0 +1,29 @@
+#reservation {
+    width: 22em;
+    height: 32em;
+    background-color: var(--color--foreground);
+    border-radius: 0.5em;
+    padding: 2em;
+    display: flex;
+    flex-direction: column;
+    gap: 2em;
+}
+
+#reservation>h1 {
+    width: 100%;
+    text-align: center;
+}
+
+#reservation h2 {
+    margin: 0;
+}
+
+#reservation>div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+}
+
+#submit {
+    margin: auto;
+}

@@ -28,11 +28,11 @@ export const handler = async (event) => {
     })
   }
 
-  let CreateNewDay = (date, rID, authentificationToken) => {
+  let CreateNewDay = (sqlDate, rID, authentificationToken) => {
     return new Promise((resolve, reject) => {
       const dayID = crypto.randomUUID();
       console.log(rID)
-      pool.query("INSERT INTO days VALUES (?, ?, ?, ?)", [dayID, date, 0, rID], (error, rows) => {
+      pool.query("INSERT INTO days VALUES (?, ?, ?, ?)", [dayID, sqlDate, 0, rID], (error, rows) => {
         if(error) { return reject(error); }
         return resolve(rows);
       })
@@ -47,17 +47,21 @@ export const handler = async (event) => {
       statusCode: 401,
       error: 'User is not authenticated'
     };
+    pool.end();
     return response;
   } else if (decoded.isAdmin) {
     response = {
       statusCode: 401,
       error: "Administrators cannot close days"
     }
+    pool.end();
     return response;
   }
   const paramSectionDate = event.date.split("-");
-  const paramTsDate = new Date(paramSectionDate[2], paramSectionDate[0], paramSectionDate[1]) ;
-  const paramSqlDate = paramSectionDate[2] + "-" + (parseInt(paramSectionDate[0]) + 1) + "-" + (paramSectionDate[1]);
+  const paramTsDate = new Date(paramSectionDate[2], paramSectionDate[0] - 1, paramSectionDate[1]) ;
+  const paramSqlDate = paramSectionDate[2] + "-" + (parseInt(paramSectionDate[0])) + "-" + (paramSectionDate[1]);
+  console.log(paramTsDate);
+  console.log(paramSqlDate);
   try {
     futureDay = await FindExistingDay(paramSqlDate, decoded.restaurantID, event.jwt)
   } catch (error) {
@@ -66,6 +70,7 @@ export const handler = async (event) => {
       statusCode:400,
       error: 'Date is not real'
     }
+    pool.end();
     return response
   }
   let today = new Date()
@@ -89,7 +94,7 @@ export const handler = async (event) => {
       }
     }
   } else { //Case for creating a new day
-      await CreateNewDay(event.date, decoded.restaurantID, event.jwt)
+      await CreateNewDay(paramSqlDate, decoded.restaurantID, event.jwt)
       response = {
         statusCode: 200,
         date: paramTsDate,
@@ -97,8 +102,7 @@ export const handler = async (event) => {
       }
   }
 
-  pool.end()
-
+  pool.end();
   return response;
 };
 

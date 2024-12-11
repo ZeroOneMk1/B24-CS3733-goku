@@ -37,18 +37,20 @@ export const handler = async (event) => {
       statusCode: 401,
       error: 'User is not authenticated'
     };
+    pool.end();
     return response;
   } else if (decoded.isAdmin) {
     response = {
       statusCode: 401,
       error: "Administrators cannot reopen days"
     }
+    pool.end();
     return response;
   }
   console.log(decoded.restaurantID)
   const paramSectionDate = event.date.split("-");
-  const paramTsDate = new Date(paramSectionDate[2], paramSectionDate[0], paramSectionDate[1]) ;
-  const paramSqlDate = paramSectionDate[2] + "-" + (parseInt(paramSectionDate[0]) + 1) + "-" + (paramSectionDate[1]);
+  const paramTsDate = new Date(paramSectionDate[2], paramSectionDate[0] - 1, paramSectionDate[1]) ;
+  const paramSqlDate = paramSectionDate[2] + "-" + (parseInt(paramSectionDate[0])) + "-" + (paramSectionDate[1]);
   console.log(paramSqlDate)
   const restaurantID = decoded.restaurantID
   try {
@@ -90,8 +92,7 @@ export const handler = async (event) => {
     }
   }
 
-  pool.end()
-
+  pool.end();
   return response;
 };
 
