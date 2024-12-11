@@ -8,7 +8,7 @@ export const handler = async (event) => {
         error: authError
     }
 
-    if (decoded.type != "admin") return {
+    if (decoded.isAdmin != true) return {
         statusCode: 401,
         error: "User not authenticated"
     }
@@ -24,14 +24,15 @@ export const handler = async (event) => {
         let query;
         let finalRestaurantInfos;
         let restaurantError;
-        query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants`;
+        query = `SELECT restaurantID, name, address, isActive, openingTime, closingTime FROM restaurants`;
         [finalRestaurantInfos, restaurantError] = await pool.query(query);
-
+        pool.end();
         return {
             statusCode: 200,
             restaurants: finalRestaurantInfos
         };
     } catch (error) {
+        pool.end();
         return {
             statusCode: 500,
             error: "Internal server error",

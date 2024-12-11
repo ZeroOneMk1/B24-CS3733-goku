@@ -16,9 +16,12 @@ export const handler = async (event) => {
         // get information about reservation
         let infoquery = `SELECT * FROM reservations WHERE confirmationCode = ? AND email = ?`;
         let [reservation_info, infoerror] = await pool.query(infoquery, [requestedReservationCode, requestedReservationEmail]);
-        if (reservation_info.length === 0) return {
-            statusCode: 400,
-            error: "Reservation does not exist"
+        if (reservation_info.length === 0) {
+            pool.end();
+            return {
+                statusCode: 400,
+                error: "Reservation does not exist"
+            }
         };
         let reservation = reservation_info[0];
         let tableID = reservation.tableID;
@@ -37,6 +40,7 @@ export const handler = async (event) => {
         let now = new Date();
         let reservationDate = new Date(day_date[0].date);
         if (now > reservationDate) {
+            pool.end();
             return {
                 statusCode: 400,
                 error: "Reservation date is in the past"
@@ -46,6 +50,7 @@ export const handler = async (event) => {
         let deletequery = `DELETE FROM reservations WHERE confirmationCode = ?`;
         let [result, deleteerror] = await pool.query(deletequery, [requestedReservationCode]);
         let formattedDate = reservationDate.toISOString().split('T')[0];
+        pool.end();
         return {
             statusCode: 200,
             body: {
@@ -59,6 +64,7 @@ export const handler = async (event) => {
             }
         }
     } catch (error) {
+        pool.end();
         return {
             statusCode: 500,
             error: "Internal server error"
