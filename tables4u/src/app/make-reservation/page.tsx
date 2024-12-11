@@ -29,7 +29,8 @@ interface GetRestaurantInfoResponse {
     }[];
 }
 
-export default function MakeReservation({ searchParams }: { searchParams: { restaurantID: string}}) {
+export default function MakeReservation({ searchParams }:
+    { searchParams: { restaurantID: string, guestCount: string, date?: string}}) {
     const restaurantID = searchParams.restaurantID;
 
     const [name, setName] = useState<string>('');
@@ -39,8 +40,8 @@ export default function MakeReservation({ searchParams }: { searchParams: { rest
     const [restaurantInfo, setRestaurantInfo] = useState<GetRestaurantInfoResponse | null>(null);
 
     // run getAvailableTimes when date or guestCount changes
-    const [guestCount, setGuestCount] = useState("1");
-    const [date, setDate] = useState("");
+    const [guestCount, setGuestCount] = useState(searchParams.guestCount);
+    const [date, setDate] = useState( searchParams.date ?? "");
     const [availableTimes, setAvailableTimes] = useState<string[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [message, setMessage] = useState<string>("");
@@ -93,12 +94,12 @@ export default function MakeReservation({ searchParams }: { searchParams: { rest
             address: JSON.parse(data.body).restaurantInfo.address
         });
     }
-    useEffect(() => { fetchRestaurantInfo() }, []);
 
+    useEffect(() => { fetchRestaurantInfo() }, []);
     useEffect(() => {
         if (date && guestCount && restaurantInfo)
             getAvailableTimes(date, parseInt(guestCount));
-    }, [date, guestCount]);
+    }, [date, guestCount, restaurantInfo]);
 
     async function handleSubmit(event: React.FormEvent) {
         event.preventDefault();
@@ -140,14 +141,20 @@ export default function MakeReservation({ searchParams }: { searchParams: { rest
         setReservationCode(data.confirmationCode);
     };
 
-    if (!hasReserved) {
+    if (!restaurantInfo) {
+        return (
+            <div>
+                <h1>Waiting...</h1>
+            </div>
+        )
+    } else if (!hasReserved) {
         return (
             <div style={{ padding: '20px', maxWidth: '400px', margin: '0 auto', border: '1px solid #ccc', borderRadius: '10px' }}>
                 <h1>Make a Reservation</h1>
-                {/* <p>Restaurant: {restaurantID}</p> */}
-                <p><strong>{restaurant.name}</strong></p>
-                <p>{restaurant.address}</p>
-                <p>4 guests &middot; Monday, November 11th</p>
+                <div id="restaurant">
+                    <p><strong>{restaurant.name}</strong></p>
+                    <p>{restaurant.address}</p>
+                </div>
                 {/* Date Input */}
                 <div className="find-input">
                     <label htmlFor="date">Day: </label>

@@ -44,6 +44,14 @@ export default function List() {
         } else setListRestaurantsStatus(result.error);
     };
 
+    function constructLink(restaurantID: string) {
+        let link = "/make-reservation";
+        link += "?restaurantID=" + encodeURIComponent(restaurantID);
+        link += "&guestCount=" + encodeURIComponent(guestCount);
+        if (date != "") link += "&date=" + encodeURIComponent(date);
+        return link;
+    }
+
     useEffect(() => { submit() },[]);
 
     return (
@@ -85,7 +93,7 @@ export default function List() {
                     <ul>
                         {restaurants.map((restaurant, index) => (
                             <li key={index}>
-                                <Link href={`/make-reservation?restaurantID=${encodeURIComponent(restaurant.restaurantID)}`}
+                                <Link href={constructLink(restaurant.restaurantID)}
                                     className={styles.restaurant}>
                                     <h2>{restaurant.name}</h2>
                                     <p>{restaurant.address}</p>
