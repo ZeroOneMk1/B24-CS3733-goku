@@ -155,7 +155,7 @@ export const handler = async (event) => {
         [dayIDs, dayerror] = await pool.query(query, [datestring, restaurantIDs]);
         dayIDs = dayIDs.map(day => day.dayID);
         if (dayIDs.length == 0) {
-            query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
+            query = `SELECT restaurantID, name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
             [finalRestaurantInfos, restaurantError] = await pool.query(query, [restaurantIDs]);
             pool.end();
             return {
@@ -189,7 +189,7 @@ export const handler = async (event) => {
             [reservationIDs, reservationerror] =
                 await pool.query(query, [dayIDs]);
             if (reservationIDs.length === 0) {
-                query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
+                query = `SELECT restaurantID, name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
                 [finalRestaurantInfos, restaurantError] = await pool.query(query, [restaurantIDs]);
                 pool.end();
                 return {
@@ -233,7 +233,7 @@ export const handler = async (event) => {
         // Find the restaurantIDs these tables belong to.
         const availableRestaurantIDs = availableTables.map(table => table.restaurantID);
         // Find the restaurant information for these restaurantIDs.
-        query = `SELECT name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
+        query = `SELECT restaurantID, name, address, isActive, openingTime, closingTime FROM restaurants WHERE restaurantID IN (?)`;
         [finalRestaurantInfos, restaurantError] = await pool.query(query, [availableRestaurantIDs]);
     } else {
         if (filters.time !== "") {
