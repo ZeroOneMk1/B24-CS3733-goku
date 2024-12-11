@@ -61,15 +61,23 @@ export default function MakeReservation({ searchParams }:
         const openingTime = restaurantInfo.restaurantInfo.openingTime;
         const closingTime = restaurantInfo.restaurantInfo.closingTime;
         const times: string[] = [];
+        const calls: Promise<Response>[] = [];
         for (let i = openingTime; i < closingTime; i++) {
-            const response = await fetch(process.env.NEXT_PUBLIC_FUNCTION_URL + "/ListRestaurants", {
+            const call = fetch(process.env.NEXT_PUBLIC_FUNCTION_URL + "/ListRestaurants", {
                 method: "POST",
                 body: JSON.stringify({ filters: { name: restaurant.name, date: day, time: i.toString(),
                     guestCount: guestCount.toString(), onlyShowAvailableRestaurants: 'true' } }),
             });
+            calls.push(call);
+            await new Promise(r => setTimeout(r, 100)); // 100ms delay
+        }
 
+        const responses = await Promise.all(calls);
+        for (let i = 0; i < responses.length; i++) {
+            const response = responses[i];
+            const time = openingTime + i;
             const data = await response.json();
-            if (data.restaurants && data.restaurants.length > 0) times.push(i.toString());
+            if (data.restaurants && data.restaurants.length > 0) times.push(time.toString());
         }
 
         setAvailableTimes(times);
@@ -216,9 +224,5 @@ export default function MakeReservation({ searchParams }:
                 </form>
             </div>
         );
-    } else {
-        return (
-            <ReservationInfo code={reservationCode} email={email} canDelete={true} />
-        );
-    }
+    } else return (<ReservationInfo code={reservationCode} email={email} canDelete={true} />);
 };
